@@ -25,7 +25,7 @@ def get_credentials(filename):
 class Client:
     def __init__(self, token, notebook_name='default'):
         try:
-            self.client = EvernoteClient(token=token, sandbox=True)
+            self.client = EvernoteClient(token=token, sandbox=False)
         except:
             raise SystemExit  # no point continuing if this doesn't work.
         self.note_store = self.client.get_note_store()
