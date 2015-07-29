@@ -18,18 +18,12 @@ class index:
         else:
             self.file = open('Downloads/_index.html', 'a')  # otherwise open for appending without initial html
 
-    def add_link(self, title, url):
+    def add_link(self, title, local_url, remote_url):
         """
         Add a new link to the index file.
-        :param title:
-        :type title:
-        :param url:
-        :type url:
-        :return void:
-        :rtype None:
         """
         self.file.write(
-            '    <li><a href="{}">{}</a></li>\n'.format(url, title)
+            '    <li><a href="{}">{}</a> | <a href="{}">Original</a></li>\n'.format(local_url, title, remote_url)
         )  # write the link and title to a list. New line is for formatting of file itself.
 
     def save_and_close(self):
