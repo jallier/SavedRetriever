@@ -11,17 +11,6 @@ import re
 import bleach
 
 
-def get_credentials(filename):
-    """
-    This function opens a credentials file, which stores the user credentials tokens. The credentials file must exist,
-    and contain the correct data in json format
-    Returns a dict with json data from file.
-    """
-    with open(filename, 'r') as json_file:
-        json_data = json.load(json_file)
-    return json_data
-
-
 class Client:
     def __init__(self, token, notebook_name='default'):
         try:
@@ -55,7 +44,7 @@ class Client:
 
     def new_note(self, title):  # Should this be a separate class?
         self.note = Types.Note()
-        self.note.title = title[:252] + "..."  # truncates note length to fit evernote
+        self.note.title = title[:252] + "..."  # truncates title length to fit evernote
         self.note.content = self.start_xml_tag
         if self.notebook_name != 'default':
             self.note.notebookGuid = self.notebook_guid
@@ -138,7 +127,7 @@ class Client:
         :return:
         """
         if sanitize is True:
-            self.add_text(self.html_to_enml(self.santize_html(input_html)))  # need to see if this is used
+            self.add_text(self.html_to_enml(self.santize_html(input_html)))
         else:
             self.add_text(input_html)
         return
@@ -147,15 +136,13 @@ class Client:
         """
         Helper function for add_html method. Shouldn't need to be called by itself.
         """
-        # pattern = '( id=".*?")|( class=".*?")|<figure.*?>|<\/figure>|<figcaption.*?>|<\/figcaption>'  # strips id and class atr from tags
-        # output_text = re.sub(pattern, "", html_content)
         output_text = html_content
 
-        output_text = re.sub("<br>", "<br/>", output_text)  # fixes br tag
+        output_text = re.sub("<br>", "<br/>", output_text)  # fixes br tag for evernote
 
-        output_text = re.sub("[^\x00-\x9C4]", "-", output_text)  # need to investigate: need to exclude dashes
+        output_text = re.sub("[^\x00-\x9C4]", "-", output_text)  # need to investigate: need to exclude dashes. Is this still necessary?
 
-        output_text = re.sub('(<a href="[^http].*?</a>)', '-removed-', output_text)
+        output_text = re.sub('(<a href="[^http].*?</a>)', '-removed-', output_text)  # Removes invalid <a> tags
 
         pattern = 'href=".*?"'  # wow this is ugly. Fixes subreddit linking
         matches = re.finditer(pattern, output_text)

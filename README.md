@@ -31,7 +31,7 @@ As of version 0.9, SR requires the use of the these 3rd party services. This mea
  - Readability - [readability.com](www.readability.com)
  - Imgur - [imgur.com](www.imgur.com)
  - Evernote - [evernote.com](www.dev.evernote.com)
- >Note: Evernote is recommended, but not required. In future versions some of these may become optional.
+>Note: Evernote is recommended, but not required. In future versions some of these may become optional.
 
 ##Commandline switches##
 The following commandline switches are available:
