@@ -1,17 +1,3 @@
-__author__ = 'fuzzycut'
-"""
-Retreives saved content from reddit.
-Uses 3rd party libraries:
-    -PRAW
-    -easy-oauth
-
-TODO:
-    - Optimise code
-    - Check EN if note exists?
-    - Dropbox support
-    - Investigate using Goose to parse articles.
-"""
-
 import praw
 import json
 import urllib.request
@@ -24,16 +10,35 @@ import evernote.edam.error
 import firstrun
 import codecs
 import re
-import imgurpython.helpers.error
+import html_index
+
+__author__ = 'fuzzycut'
+"""
+Retreives saved content from reddit.
+
+TODO:
+    - Optimise code
+    - Check EN if note exists?
+    - Dropbox support
+    - Investigate using Goose to parse articles.
+"""
 
 
-def html_writer(file_name, output):
+def html_writer(file, output):
+    """
+    Writes an html file.
+
+    Takes: the name of the file to write and the content (string) to write.
+    Returns: the relative path of the downloaded file. (Relative to location of script)
+    """
     # f = open("Downloads/{}.html".format(file_name), 'w')  # Change this once you get evernote functionality going.
-    f = codecs.open("Downloads/{}.html".format(file_name), 'w', 'utf-8')
+    file_name = "Downloads/{}.html".format(file)
+    name = file + ".html"
+    f = codecs.open(file_name, 'w', 'utf-8')
     html_image_size = "<head>\n<style>\nimg {max-width:100%;}\n</style>\n</head>\n"
     f.write(html_image_size + output)
     f.close()
-    return
+    return name
 
 
 def html_output_string(permalink, author, body):
@@ -146,6 +151,7 @@ def main():
             if input("Abort (y/n): ") == 'y':  # Might be best to just silently continue rather than ask.
                 raise SystemExit
 
+    html_index_file = html_index.index(me.name)
     ind = open('index.txt', 'a')  # open index file for appending
     for i in me.get_saved(limit=None):  # change this limit later
         name = i.name
@@ -159,9 +165,11 @@ def main():
                 author = i.author
                 title = "{} comments from {}".format(author, i.link_title)
 
-                output = html_output_string(permalink, author, body)
                 # html output
-                html_writer(name, output)
+                output = html_output_string(permalink, author, body)
+                file_name = html_writer(name, output)
+                html_index_file.add_link(i.link_title, file_name, permalink)
+
                 # en api section
                 if use_evernote is True:
                     enclient.new_note(title)
@@ -176,9 +184,11 @@ def main():
                 author = i.author
                 title = i.title
 
-                output = html_output_string(permalink, author, text)
                 # html output
-                html_writer(name, output)
+                output = html_output_string(permalink, author, text)
+                file_name = html_writer(name, output)
+                html_index_file.add_link(title, file_name, permalink)
+
                 # en api section
                 if use_evernote is True:
                     enclient.new_note(title)
@@ -187,9 +197,7 @@ def main():
                     note = enclient.create_note()
                     print(note.guid)
 
-            elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif',
-                                                                                              'gifv',
-                                                                                              'pdf']:  # is direct image.
+            elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif', 'gifv', 'pdf']:  # is direct image.
                 """
                 Need to check file types and test pdf. How does this handle gfycat and webm? Can EN display that inline?
                 The horrendous regex in the if is to strip out non-valid filetype chars. Shudder
@@ -207,13 +215,14 @@ def main():
                 if image_downloaded:
                     # write image as <img> or link to local pdf downloaded in html file
                     if filename.split('.')[-1] == 'pdf':
-                        img = '<a href="{}">Click here for link to downloaded file</a>'.format(base_filename)
+                        img = '<a href="{}">Click here for link to downloaded pdf</a>'.format(base_filename)
                     else:
                         img = "{}<br><br><img src='{}'>".format(i.title, base_filename)  # html for embedding in html file
                 else:
                     img = "Image failed to download - It may be temporarily or permanently unavailable"
 
-                html_writer(name, html_output_string(permalink, author, img))
+                file_name = html_writer(name, html_output_string(permalink, author, img))
+                html_index_file.add_link(title, file_name, permalink)
 
                 # Evernote api section
                 if use_evernote is True:
@@ -270,7 +279,9 @@ def main():
                     if not os.path.exists(filename):  # only download if file doesn't already exist
                         image_saver(image_link, filename)
                     body += img
-                html_writer(name, html_output_string(permalink, author, body))
+                file_name = html_writer(name, html_output_string(permalink, author, body))
+                html_index_file.add_link(title, file_name, permalink)
+
                 # Evernote api section
                 if use_evernote is True:
                     enclient.new_note(title)
@@ -299,7 +310,8 @@ def main():
 
                 # html output section.
                 output = html_output_string(permalink, author, article)
-                html_writer(i.name, output)
+                file_name = html_writer(name, output)
+                html_index_file.add_link(title, file_name, permalink)
 
                 # Evernote section
                 if use_evernote is True:
@@ -312,7 +324,7 @@ def main():
                     enclient.add_html(output)
 
                     # Add html file to note
-                    enclient.add_resource("Downloads/{}.html".format(i.name))
+                    enclient.add_resource("Downloads/{}.html".format(name))
                     note = enclient.create_note()
                     print(note.guid)
             else:
@@ -323,6 +335,7 @@ def main():
 
     # end of for loop
     ind.close()
+    html_index_file.save_and_close()
 
     raise SystemExit  # This is to fix some random ssl socket error.
 
