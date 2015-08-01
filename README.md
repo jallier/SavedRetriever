@@ -11,7 +11,7 @@ In order to run the program, you will need to get your own access tokens from th
 This means that you will need an account for each of the required services, and will need to register new apps for each of them.
 Once the folder is downloaded:
 
- 1. First ensure you have created a new personal script at [https://www.reddit.com/prefs/apps/](https://www.reddit.com/prefs/apps/) 
+ 1. First ensure that you have installed the required third party libraries and that you have created a new personal script at [https://www.reddit.com/prefs/apps/](https://www.reddit.com/prefs/apps/) 
  2. Then run
 >python main.py
 
@@ -52,3 +52,4 @@ SR uses the following 3rd party libraries:
  - [Evernote API (for python 3)](https://github.com/evernote/evernote-sdk-python3)
  - [Readability API](https://github.com/arc90/python-readability-api)
  - [Imgur API](https://github.com/Imgur/imgurpython)
+ - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/bs4/doc/)
