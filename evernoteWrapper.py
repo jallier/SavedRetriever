@@ -41,18 +41,13 @@ class Client:
                 new_notebook.defaultNotebook = False
                 self.notebook_guid = self.note_store.createNotebook(new_notebook).guid
 
-        # xml for note content
-        self.start_xml_tag = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM ' \
-                             '"http://xml.evernote.com/pub/enml2.dtd"><en-note>'
-        self.content = ""
-        self.end_xml_tag = '</en-note>'
         self.note = None
 
     def new_note(self, title):  # Should this be a separate class?
         self.note = Types.Note()
-        self.note.title = (title[:252] + "...") if len(
-            title) > 252 else title  # truncates title length to fit evernote. Thanks SO.
-        self.note.content = self.start_xml_tag
+        self.note.title = (title[:252] + "...") if len(title) > 252 else title  # truncates title length to fit evernote. Thanks SO.
+        self.note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM ' \
+                            '"http://xml.evernote.com/pub/enml2.dtd"><en-note>'
         if self.notebook_name != 'default':
             self.note.notebookGuid = self.notebook_guid
         return
@@ -115,7 +110,7 @@ class Client:
         :return: Returns a note object of the created note
         :rtype: Types.Note
         """
-        self.note.content += self.end_xml_tag
+        self.note.content += '</en-note>'  # enml closing tag
         try:
             created_note = self.note_store.createNote(self.note)  # this may result in errors if malformed xml
         except:

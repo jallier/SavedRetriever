@@ -19,8 +19,9 @@ Retreives saved content from reddit.
 TODO:
     - Optimise code
     - Check EN if note exists?
-    - Dropbox support
+    - Dropbox support?
     - Investigate using Goose to parse articles.
+    - Fix the random ssl errors
 """
 
 
@@ -142,7 +143,7 @@ def main():
         index = []
 
     if use_evernote is True:
-        try:
+        try:  # this block should be moved to the wrapper class. Does it even do anything?
             enclient = evernoteWrapper.Client(
                 credentials['evernote']['dev_token'],
                 'Saved from Reddit')  # This will need to change once EN is switched to production
@@ -304,7 +305,7 @@ def main():
                 parse_response = parse.get_article(url)
                 article = parse_response.json()
                 if 'content' not in article:  # if unable to parse document, manually set an error message
-                    article['content'] = "Unable to parse page"
+                    article['content'] = 'Unable to parse page - See <a href="{}">here</a> for the original link'.format(url)
                 article = article['content']
                 article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
 
@@ -317,14 +318,11 @@ def main():
                 if use_evernote is True:
                     enclient.new_note(title)
                     enclient.add_tag(*evernote_tags)
-                    output = html_output_string(permalink, author,
-                                                '<br/><a href="{}">{}</a><br/>Source cannot be stored in evernote '
-                                                '(blame their stupid API.) See source above, or attached html file'.format(
-                                                    url, title))
+                    output = html_output_string(permalink, author, article)
                     enclient.add_html(output)
 
                     # Add html file to note
-                    enclient.add_resource("Downloads/{}.html".format(name))
+                    # enclient.add_resource("Downloads/{}.html".format(name))
                     note = enclient.create_note()
                     print(note.guid)
             else:
