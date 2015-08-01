@@ -1,6 +1,6 @@
 #SavedRetriever #
 
-SR is a python script that will fetch the users saved comments and posts from reddit and downloaded them locally, as well as uploading to evernote. Authenticates using Oauth, but this needs some work. 
+SR is a python script that will fetch the users saved comments and posts from reddit and download them locally, as well as uploading to evernote. Authenticates using Oauth, but this needs some work. 
 
 ----------
 
@@ -33,7 +33,10 @@ As of version 0.9, SR requires the use of the these 3rd party services. This mea
  - Readability - [readability.com](www.readability.com) - Register for an account, then see [here](https://www.readability.com/developers/api) to get access tokens
  - Imgur - [imgur.com](www.imgur.com) - Register for an account, then see [here](https://api.imgur.com/oauth2/addclient?) to get access tokens. Register an app without a callback url
  - Evernote - [evernote.com](www.dev.evernote.com) - Register for an account, then see [here](https://www.evernote.com/api/DeveloperToken.action) to get personal developer token
->Note: Evernote is recommended, but not required. In future versions some of these may become optional.
+
+>Note: Evernote is recommended, but not required.
+
+Readability is required to parse articles into more readable text, and imgur is required to download albums (the majority of albums posted to reddit are from imgur)
 
 ##Commandline switches##
 The following commandline switches are available:
