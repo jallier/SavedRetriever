@@ -1,19 +1,24 @@
 __author__ = 'fuzzycut'
 
-import json
 # import evernote.edam.userstore.constants as UserStoreConstants
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
 import hashlib
 import binascii
-import evernote
 import re
 import bleach
 
 
 class Client:
     def __init__(self, token, notebook_name='default'):
-        try:
+        """
+
+        :param token: the developer token needed for access to the account
+        :type token: string
+        :param notebook_name: name of notebook to add the new notes to.
+        :type notebook_name: string
+        """
+        try:  # Should make sandbox a debug option
             self.client = EvernoteClient(token=token, sandbox=True)
         except:
             raise SystemExit  # no point continuing if this doesn't work.
@@ -44,7 +49,7 @@ class Client:
 
     def new_note(self, title):  # Should this be a separate class?
         self.note = Types.Note()
-        self.note.title = title[:252] + "..."  # truncates title length to fit evernote
+        self.note.title = (title[:252] + "...") if len(title) > 252 else title  # truncates title length to fit evernote. Thanks SO.
         self.note.content = self.start_xml_tag
         if self.notebook_name != 'default':
             self.note.notebookGuid = self.notebook_guid
@@ -53,7 +58,8 @@ class Client:
     def add_text(self, text):
         """
         Adds text content to the note. Adds a new line at the end of the text.
-        :param text:
+        :param text: text to add to the note
+        :type text: string
         :return:
         """
         self.note.content += text + "<br/>"  # need try block to test if note already exists.
@@ -62,7 +68,8 @@ class Client:
     def add_resource(self, filename):
         """
         Adds a resource (image or pdf at this stage) to the note. Adds a new line at the end of the attachment
-        :param filename:
+        :param filename: name of the file to add to the note
+        :type filename: string
         :return:
         """
         accepted_mimes = {
@@ -123,48 +130,23 @@ class Client:
         then adds it to the current note.
         This method is NOT comprehensive. It will only strip classes from tags, close <br> tags and <img> tags
         More conversions will be added as needed.
-        :param output_text:
+        :param input_html: string of the html to add to the note.
+        :type input_html: string
         :return:
         """
         if sanitize is True:
-            self.add_text(self.html_to_enml(self.santize_html(input_html)))
+            self.add_text(self.__html_to_enml(input_html))
         else:
             self.add_text(input_html)
         return
 
-    def html_to_enml(self, html_content):
+    def __html_to_enml(self, html_content):
         """
         Helper function for add_html method. Shouldn't need to be called by itself.
+        :param html_content: html content to add
+        :type html_content: string
+        :rtype: string
         """
-        output_text = html_content
-
-        output_text = re.sub("<br>", "<br/>", output_text)  # fixes br tag for evernote
-
-        output_text = re.sub("[^\x00-\x9C4]", "-", output_text)  # need to investigate: need to exclude dashes. Is this still necessary?
-
-        output_text = re.sub('(<a href="[^http].*?</a>)', '-removed-', output_text)  # Removes invalid <a> tags
-
-        pattern = 'href=".*?"'  # wow this is ugly. Fixes subreddit linking
-        matches = re.finditer(pattern, output_text)
-        for i in matches:
-            full_match = i.group()
-            match = full_match.split('"')
-            if match[1][0:3] == '/r/':
-                output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}"'.format(match[1][3:]), output_text)
-
-        # pattern = '<img.*?>'  # pattern for properly closing img tags
-        # matches = re.findall(pattern, output_text)
-        # for match in matches:  # loops through all img tag mathches and adds closing tag
-        #     output_text = re.sub(match, match + "</img>", output_text)
-        #
-        # pattern = '<a.*?>'  # pattern for properly closing img tags
-        # matches = re.findall(pattern, output_text)
-        # for match in matches:  # loops through all img tag mathches and adds closing tag
-        #     output_text = re.sub(match, match + "</a>", output_text)
-
-        return output_text
-
-    def santize_html(self, input_html):
         allowed_tags = [
             'a',
             'b',
@@ -190,7 +172,34 @@ class Client:
         allowed_attrs = {
             '*': ['href', 'src']
         }
-        return bleach.clean(input_html, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+        output_text = bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+
+        output_text = re.sub("<br>|</br>", "<br/>", output_text)  # fixes br tag for evernote
+
+        output_text = re.sub("[^\x00-\x9C4]", "-",
+                             output_text)  # need to investigate: need to exclude dashes. Is this still necessary?
+
+        output_text = re.sub('(<a href="[^http].*?</a>)', '-removed-', output_text)  # Removes invalid <a> tags
+
+        pattern = 'href=".*?"'  # wow this is ugly. Fixes subreddit linking
+        matches = re.finditer(pattern, output_text)
+        for i in matches:
+            full_match = i.group()
+            match = full_match.split('"')
+            if match[1][0:3] == '/r/':
+                output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}"'.format(match[1][3:]), output_text)
+
+        # pattern = '<img.*?>'  # pattern for properly closing img tags
+        # matches = re.findall(pattern, output_text)
+        # for match in matches:  # loops through all img tag mathches and adds closing tag
+        #     output_text = re.sub(match, match + "</img>", output_text)
+        #
+        # pattern = '<a.*?>'  # pattern for properly closing a tags
+        # matches = re.findall(pattern, output_text)
+        # for match in matches:  # loops through all img tag mathches and adds closing tag
+        #     output_text = re.sub(match, match + "</a>", output_text)
+
+        return output_text
 
     def add_tag(self, *input_tags):
         """
