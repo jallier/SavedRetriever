@@ -7,6 +7,7 @@ import hashlib
 import binascii
 import re
 import bleach
+from bs4 import BeautifulSoup
 
 
 class Client:
@@ -49,7 +50,8 @@ class Client:
 
     def new_note(self, title):  # Should this be a separate class?
         self.note = Types.Note()
-        self.note.title = (title[:252] + "...") if len(title) > 252 else title  # truncates title length to fit evernote. Thanks SO.
+        self.note.title = (title[:252] + "...") if len(
+            title) > 252 else title  # truncates title length to fit evernote. Thanks SO.
         self.note.content = self.start_xml_tag
         if self.notebook_name != 'default':
             self.note.notebookGuid = self.notebook_guid
@@ -110,7 +112,8 @@ class Client:
     def create_note(self):
         """
         Adds the completed note to the default evernote notebook.
-        :return:
+        :return: Returns a note object of the created note
+        :rtype: Types.Note
         """
         self.note.content += self.end_xml_tag
         try:
@@ -167,17 +170,25 @@ class Client:
             'ul',
             'table',
             'tr',
-            'td'
+            'td',
+            'blockquote',
+            'caption',
+            'strike',
+            'big',
+            'center',
+            'cite',
+            'code'
         ]
         allowed_attrs = {
             '*': ['href', 'src']
         }
-        output_text = bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+        output_text = bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs,
+                                   strip=True)  # removes disallowed elements from document for evernote
 
         output_text = re.sub("<br>|</br>", "<br/>", output_text)  # fixes br tag for evernote
 
-        output_text = re.sub("[^\x00-\x9C4]", "-",
-                             output_text)  # need to investigate: need to exclude dashes. Is this still necessary?
+        # output_text = re.sub("[^\x00-\x9C4]", "-",
+        #                      output_text)  # need to investigate: need to exclude dashes. Is this still necessary?
 
         output_text = re.sub('(<a href="[^http].*?</a>)', '-removed-', output_text)  # Removes invalid <a> tags
 
@@ -189,15 +200,8 @@ class Client:
             if match[1][0:3] == '/r/':
                 output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}"'.format(match[1][3:]), output_text)
 
-        # pattern = '<img.*?>'  # pattern for properly closing img tags
-        # matches = re.findall(pattern, output_text)
-        # for match in matches:  # loops through all img tag mathches and adds closing tag
-        #     output_text = re.sub(match, match + "</img>", output_text)
-        #
-        # pattern = '<a.*?>'  # pattern for properly closing a tags
-        # matches = re.findall(pattern, output_text)
-        # for match in matches:  # loops through all img tag mathches and adds closing tag
-        #     output_text = re.sub(match, match + "</a>", output_text)
+        soup = BeautifulSoup(output_text, "html.parser")
+        output_text = str(soup)
 
         return output_text
 
