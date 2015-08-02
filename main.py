@@ -33,7 +33,6 @@ def html_writer(file, output):
     Takes: the name of the file to write and the content (string) to write.
     Returns: the relative path of the downloaded file. (Relative to location of script)
     """
-    # f = open("Downloads/{}.html".format(file_name), 'w')  # Change this once you get evernote functionality going.
     file_name = "Downloads/{}.html".format(file)
     name = file + ".html"
     f = codecs.open(file_name, 'w', 'utf-8')
@@ -49,11 +48,10 @@ def html_output_string(permalink, author, body):
     defines a global string to use to neaten up the output sections
     Returns a string of the html output for the items.
     """
-    return '<a href="{}">{}</a><br/>by <a href="http://www.reddit.com/u/{}">/u/{}</a><br/><br/>{}'.format(permalink,
-                                                                                                          permalink,
-                                                                                                          author,
-                                                                                                          author,
-                                                                                                          body)
+    return '<a href="{0}">{0}</a><br/>by <a href="http://www.reddit.com/u/{1}">/u/{1}</a><br/><br/>{2}'.format(
+        permalink,
+        author,
+        body)
 
 
 def image_saver(url, filename):
@@ -67,16 +65,16 @@ def image_saver(url, filename):
 
 
 def get_reddit_user(credentials):
-    client_ID = credentials['reddit']['client_id']
+    client_id = credentials['reddit']['client_id']
     client_secret = credentials['reddit']['client_secret']
-    redirect_URI = credentials['reddit']['redirect_uri']
+    redirect_uri = credentials['reddit']['redirect_uri']
     refresh_token = credentials['reddit']['refresh_token']
     user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
 
     r = praw.Reddit(user_agent=user_agent,
-                    oauth_client_id=client_ID,
+                    oauth_client_id=client_id,
                     oauth_client_secret=client_secret,
-                    oauth_redirect_uri=redirect_URI)
+                    oauth_redirect_uri=redirect_uri)
 
     access_information = r.refresh_access_information(refresh_token)
     r.set_access_credentials(**access_information)
@@ -158,16 +156,20 @@ def main():
     ind = open('index.txt', 'a')  # open index file for appending
     for i in me.get_saved(limit=None):  # change this limit later
         name = i.name
+        file_name = name  # to stop ide complaining.
         evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
         if name not in index:
             if debug_mode is True:
                 print(name)
-                print(dir(i))  # get rid of this after testing.
-            if hasattr(i, 'body_html'):  # is comment
+                print(dir(i))
+            try:  # get the 3 reusable variables
                 permalink = i.permalink
-                body = i.body_html
                 author = i.author
+                title = i.title
+            except AttributeError:  # if i.title does not work, is a comment and should get link_title
                 title = "{} comments from {}".format(author, i.link_title)
+            if hasattr(i, 'body_html'):  # is comment
+                body = i.body_html
 
                 # html output
                 output = html_output_string(permalink, author, body)
@@ -183,12 +185,7 @@ def main():
                     note = enclient.create_note()
                     print(note.guid)
 
-            else:  # this is run if item is not a comment. Gets the reuasable variables.
-                permalink = i.permalink
-                author = i.author
-                title = i.title
-
-            if hasattr(i, 'is_self') and i.is_self is True:  # is self post
+            elif hasattr(i, 'is_self') and i.is_self is True:  # is self post
                 text = i.selftext_html
 
                 # html output
