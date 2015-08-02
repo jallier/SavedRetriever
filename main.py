@@ -22,6 +22,7 @@ TODO:
     - Dropbox support?
     - Investigate using Goose to parse articles.
     - Fix the random ssl errors
+    - Fix unicode errors
 """
 
 
@@ -36,6 +37,7 @@ def html_writer(file, output):
     file_name = "Downloads/{}.html".format(file)
     name = file + ".html"
     f = codecs.open(file_name, 'w', 'utf-8')
+    # CSS styling for images. Does not affect text
     html_image_size = "<head>\n<style>\nimg {max-width:100%;}\n</style>\n</head>\n"
     f.write(html_image_size + output)
     f.close()
@@ -158,8 +160,9 @@ def main():
         name = i.name
         evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
         if name not in index:
-            print(name)
-            print(dir(i))  # get rid of this after testing.
+            if debug_mode is True:
+                print(name)
+                print(dir(i))  # get rid of this after testing.
             if hasattr(i, 'body_html'):  # is comment
                 permalink = i.permalink
                 body = i.body_html
@@ -169,7 +172,8 @@ def main():
                 # html output
                 output = html_output_string(permalink, author, body)
                 file_name = html_writer(name, output)
-                html_index_file.add_link(i.link_title, file_name, permalink)
+                if debug_mode is False:
+                    html_index_file.add_link(i.link_title, file_name, permalink)
 
                 # en api section
                 if use_evernote is True:
@@ -179,16 +183,18 @@ def main():
                     note = enclient.create_note()
                     print(note.guid)
 
-            elif hasattr(i, 'is_self') and i.is_self is True:  # is self post
-                text = i.selftext_html
+            else:  # this is run if item is not a comment. Gets the reuasable variables.
                 permalink = i.permalink
                 author = i.author
                 title = i.title
 
+            if hasattr(i, 'is_self') and i.is_self is True:  # is self post
+                text = i.selftext_html
+
                 # html output
                 output = html_output_string(permalink, author, text)
                 file_name = html_writer(name, output)
-                html_index_file.add_link(title, file_name, permalink)
+                # html_index_file.add_link(title, file_name, permalink)
 
                 # en api section
                 if use_evernote is True:
@@ -204,9 +210,6 @@ def main():
                 The horrendous regex in the if is to strip out non-valid filetype chars. Shudder
                 """
                 url = i.url
-                author = i.author
-                permalink = i.permalink
-                title = i.title
                 base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
                     -1]))  # filename for image. Ugly regex same as above.
                 filename = "Downloads/" + base_filename
@@ -223,7 +226,7 @@ def main():
                     img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                 file_name = html_writer(name, html_output_string(permalink, author, img))
-                html_index_file.add_link(title, file_name, permalink)
+                # html_index_file.add_link(title, file_name, permalink)
 
                 # Evernote api section
                 if use_evernote is True:
@@ -236,9 +239,6 @@ def main():
                     print(note.guid)
             elif hasattr(i, 'url') and 'imgur' in i.url:  # is imgur album. Add option to download images to folder.
                 url = i.url
-                author = i.author
-                permalink = i.permalink
-                title = i.title
                 body = "<h2>{}</h2>".format(title)
 
                 # imgur api section
@@ -281,7 +281,7 @@ def main():
                         image_saver(image_link, filename)
                     body += img
                 file_name = html_writer(name, html_output_string(permalink, author, body))
-                html_index_file.add_link(title, file_name, permalink)
+                # html_index_file.add_link(title, file_name, permalink)
 
                 # Evernote api section
                 if use_evernote is True:
@@ -296,9 +296,6 @@ def main():
             elif hasattr(i, 'title') and i.is_self is False:  # is article
                 # This section needs work. It is semi-complete. Ultimately, adding in the full article is the goal.
                 url = i.url
-                author = i.author
-                permalink = i.permalink
-                title = i.title
 
                 # readability api section
                 parse = ParserClient(credentials['readability']['parser_key'])
@@ -312,7 +309,6 @@ def main():
                 # html output section.
                 output = html_output_string(permalink, author, article)
                 file_name = html_writer(name, output)
-                html_index_file.add_link(title, file_name, permalink)
 
                 # Evernote section
                 if use_evernote is True:
@@ -325,11 +321,14 @@ def main():
                     # enclient.add_resource("Downloads/{}.html".format(name))
                     note = enclient.create_note()
                     print(note.guid)
-            else:
-                pass
-            print("\n")
+
+            # end of checking for saved items #
+
             if debug_mode is False:  # if not in debug, then write index items normally, otherwise diasble for easier
                 ind.write(name + "\n")  # testing
+                html_index_file.add_link(title, file_name, permalink)
+            else:
+                print("\n")
 
     # end of for loop
     ind.close()
