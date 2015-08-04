@@ -7,6 +7,7 @@ import argparse
 import codecs
 import re
 import urllib.error
+import imgurpython.helpers.error
 from readability import ParserClient
 from imgurpython import ImgurClient
 from Resources import evernoteWrapper
@@ -55,6 +56,15 @@ def html_output_string(permalink, author, body):
 
 
 def image_saver(url, filename):
+    """
+    Saves an image to disk in the location specified
+    :param url: url of the image to download
+    :type url: string
+    :param filename: path and filename of file to download
+    :type filename: string
+    :return: If image was downloaded successfully
+    :rtype: bool
+    """
     try:
         with urllib.request.urlopen(url) as response, open(filename, "wb") as out_file:
             data = response.read()
@@ -234,32 +244,26 @@ def main():
 
                 # imgur api section
                 client = ImgurClient(credentials['imgur']['client_id'], credentials['imgur']['client_secret'])
-                gallery_id = url.replace('?', '/')
-                gallery_id = gallery_id.split('/')[-1]  # gets the id of the gallery.
-                # print(url)
-                pattern = "([A-z0-9])\w+"  # this regex is to try deal with unusual gallery names
-                match = re.search(pattern, gallery_id)  # it parses out non alphabet (ie non-valid id) characters
-                gallery_id = match.group(0)
+                pattern = '\/([A-z0-9]{5,7})'  # matches any 5-7 long word that comes after a forward slash (/).
+                match = re.findall(pattern, url)
+                gallery_id = match[-1].replace('/', '')  # removes any forward slashes for processing
+                gallery = []
+                filename = None
                 try:
                     gallery = client.get_album_images(gallery_id)
-                except:  # this deals with a strange issue where a single image is listed as an album
-                    # need to investigate: this masks other typos in the gallery names (such as &gallery that is appended sometimes)
-                    # print(url, gallery_id)
+                except imgurpython.helpers.error.ImgurClientError:  # if 'gallery' is actually just a lone image
                     try:
                         gallery = [client.get_image(gallery_id)]
-                    except:
-                        gallery = []
-                # ^ wow this block is ugly. Should probably look into error handling a bit better.
+                    except imgurpython.helpers.error.ImgurClientError as error:  # if gallery does not exist. Is this the best way to do this?
+                        if debug_mode is True or error.status_code != 404:
+                            print("**{} - {}**".format(error.status_code, error.error_message))
+
                 path = 'Downloads/{}'.format(gallery_id)
                 if not os.path.exists(path):
                     os.makedirs(path)
                 for image in gallery:  # add if gallery > 10, then just add a link (would be too large for the note)
-                    image_name = image.title
-                    if image_name == "None":
-                        image_name = ""
-                    image_description = image.description
-                    if image_description == "None":
-                        image_description = ""
+                    image_name = image.title if image.title is not None else ""
+                    image_description = image.description if image.description is not None else ""
                     image_filetype = image.type.split('/')[1]
                     image_id = image.id
                     image_link = image.link
@@ -277,9 +281,13 @@ def main():
                 if use_evernote is True:
                     enclient.new_note(title)
                     enclient.add_tag(*evernote_tags)
-                    enclient.add_text(html_output_string(permalink, author,
-                                                         'This album is too large to embed; please see '
-                                                         '<a href="{}">here</a> for the original link.'.format(url)))
+                    if len(gallery) == 1 and filename is not None:
+                        enclient.add_html(html_output_string(permalink, author, ""))
+                        enclient.add_resource(filename)
+                    else:
+                        enclient.add_text(html_output_string(permalink, author,
+                                                             'This album is too large to embed; please see '
+                                                             '<a href="{}">here</a> for the original link.'.format(url)))
                     note = enclient.create_note()
                     print(note.guid)
 

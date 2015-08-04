@@ -134,7 +134,7 @@ class Client:
         :return:
         """
         accepted_mimes = {
-            'gif': 'image/gif', 'jpg': 'image/jpeg', 'png': 'image/png', 'pdf': 'application/pdf', 'html': 'text/html'}
+            'gif': 'image/gif', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'pdf': 'application/pdf', 'html': 'text/html'}
         # ^these are mime types that can be displayed inline in the client. Also the only type that will be directly
         # downloaded by the downloader. Will need more testing. Others can be added later.
         extention = filename.split('.')[-1]
