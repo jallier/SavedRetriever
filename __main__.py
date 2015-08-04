@@ -1,18 +1,18 @@
+import warnings
 import praw
 import json
 import urllib.request
 import os
-from readability import ParserClient
-from imgurpython import ImgurClient
-import evernoteWrapper
 import argparse
-import evernote.edam.error
-import firstrun
 import codecs
 import re
-import html_index
+import urllib.error
+from readability import ParserClient
+from imgurpython import ImgurClient
+from Resources import evernoteWrapper
+from Resources import firstrun
+from Resources import html_index
 
-__author__ = 'fuzzycut'
 """
 Retreives saved content from reddit.
 
@@ -119,6 +119,7 @@ def first_run():
 
 
 def main():
+    # warnings.warn('test', ResourceWarning)
     if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
         first_run()  # Authenticate and generate the credentials file.
 
@@ -129,6 +130,8 @@ def main():
     args = read_command_args()
     use_evernote = args.e
     debug_mode = args.debug
+    if debug_mode:
+        print("Warning - Debug mode active. Files will be downloaded, but not added to index")
 
     me = get_reddit_user(credentials)
 
@@ -143,39 +146,32 @@ def main():
         index = []
 
     if use_evernote is True:
-        try:  # this block should be moved to the wrapper class. Does it even do anything?
-            enclient = evernoteWrapper.Client(
-                credentials['evernote']['dev_token'],
-                'Saved from Reddit')  # This will need to change once EN is switched to production
-        except evernote.edam.error.ttypes.EDAMUserException:
-            print("Please provide correct evernote credentials")
-            if input("Abort (y/n): ") == 'y':  # Might be best to just silently continue rather than ask.
-                raise SystemExit
+        enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'],
+                                          'Saved from Reddit')  # This will need to change once EN is switched to production
 
     html_index_file = html_index.index(me.name)
     ind = open('index.txt', 'a')  # open index file for appending
+
     for i in me.get_saved(limit=None):  # change this limit later
         name = i.name
         file_name = name  # to stop ide complaining.
         evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
-        if name not in index:
+
+        if name not in index:  # file has not been downloaded
             if debug_mode is True:
                 print(name)
                 print(dir(i))
-            try:  # get the 3 reusable variables
-                permalink = i.permalink
-                author = i.author
-                title = i.title
-            except AttributeError:  # if i.title does not work, is a comment and should get link_title
-                title = "{} comments from {}".format(author, i.link_title)
+
+            permalink = i.permalink
+            author = i.author
+            title = i.link_title if hasattr(i, 'link_title') else i.title
+
             if hasattr(i, 'body_html'):  # is comment
                 body = i.body_html
 
                 # html output
                 output = html_output_string(permalink, author, body)
                 file_name = html_writer(name, output)
-                if debug_mode is False:
-                    html_index_file.add_link(i.link_title, file_name, permalink)
 
                 # en api section
                 if use_evernote is True:
@@ -191,7 +187,6 @@ def main():
                 # html output
                 output = html_output_string(permalink, author, text)
                 file_name = html_writer(name, output)
-                # html_index_file.add_link(title, file_name, permalink)
 
                 # en api section
                 if use_evernote is True:
@@ -223,7 +218,6 @@ def main():
                     img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                 file_name = html_writer(name, html_output_string(permalink, author, img))
-                # html_index_file.add_link(title, file_name, permalink)
 
                 # Evernote api section
                 if use_evernote is True:
@@ -242,7 +236,7 @@ def main():
                 client = ImgurClient(credentials['imgur']['client_id'], credentials['imgur']['client_secret'])
                 gallery_id = url.replace('?', '/')
                 gallery_id = gallery_id.split('/')[-1]  # gets the id of the gallery.
-                print(url)
+                # print(url)
                 pattern = "([A-z0-9])\w+"  # this regex is to try deal with unusual gallery names
                 match = re.search(pattern, gallery_id)  # it parses out non alphabet (ie non-valid id) characters
                 gallery_id = match.group(0)
@@ -278,7 +272,6 @@ def main():
                         image_saver(image_link, filename)
                     body += img
                 file_name = html_writer(name, html_output_string(permalink, author, body))
-                # html_index_file.add_link(title, file_name, permalink)
 
                 # Evernote api section
                 if use_evernote is True:
@@ -321,8 +314,8 @@ def main():
 
             # end of checking for saved items #
 
-            if debug_mode is False:  # if not in debug, then write index items normally, otherwise diasble for easier
-                ind.write(name + "\n")  # testing
+            if not debug_mode:  # write index items normally, otherwise diasble for easier testing
+                ind.write(name + "\n")
                 html_index_file.add_link(title, file_name, permalink)
             else:
                 print("\n")
@@ -331,7 +324,8 @@ def main():
     ind.close()
     html_index_file.save_and_close()
 
-    raise SystemExit  # This is to fix some random ssl socket error.
 
-
-main()
+if __name__ == '__main__':
+    with warnings.catch_warnings():  # This is to ignore ssl socket unclosed warnings.
+        warnings.simplefilter('ignore')
+        main()

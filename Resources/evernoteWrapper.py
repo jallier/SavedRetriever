@@ -1,13 +1,75 @@
-__author__ = 'fuzzycut'
-
 # import evernote.edam.userstore.constants as UserStoreConstants
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
+import evernote.edam.error
 import hashlib
 import binascii
 import re
 import bleach
 from bs4 import BeautifulSoup
+
+
+def html_to_enml(html_content):
+    """
+    Helper function for add_html method. Shouldn't need to be called by itself.
+    :param html_content: html content to add
+    :type html_content: string
+    :rtype: string
+    """
+    allowed_tags = [
+        'a',
+        'b',
+        'br',
+        'em',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'img',
+        'title',
+        'p',
+        'strong',
+        'li',
+        'ol',
+        'ul',
+        'table',
+        'tr',
+        'td',
+        'blockquote',
+        'caption',
+        'strike',
+        'big',
+        'center',
+        'cite',
+        'code'
+    ]
+    allowed_attrs = {
+        '*': ['href', 'src']
+    }
+    output_text = bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs,
+                               strip=True)  # removes disallowed elements from document for evernote
+
+    output_text = re.sub("<br>|</br>", "<br/>", output_text)  # fixes br tag for evernote
+
+    # output_text = re.sub("[^\x00-\x9C4]", "-",
+    #                      output_text)  # need to investigate: need to exclude dashes. Is this still necessary?
+
+    output_text = re.sub('(<a href="[^htp].*?</a>)', '-removed-', output_text)  # Removes invalid <a> tags
+
+    pattern = 'href=".*?"'  # wow this is ugly. Fixes subreddit linking
+    matches = re.finditer(pattern, output_text)
+    for i in matches:
+        full_match = i.group()
+        match = full_match.split('"')
+        if match[1][0:3] == '/r/':
+            output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}"'.format(match[1][3:]), output_text)
+
+    soup = BeautifulSoup(output_text, "html.parser")
+    output_text = str(soup)
+
+    return output_text
 
 
 class Client:
@@ -21,8 +83,10 @@ class Client:
         """
         try:  # Should make sandbox a debug option
             self.client = EvernoteClient(token=token, sandbox=True)
-        except:
-            raise SystemExit  # no point continuing if this doesn't work.
+        except evernote.edam.error.ttypes.EDAMUserException:
+            print("Please provide correct evernote credentials")
+            if input("Abort (y/n): ") == 'y':  # Might be best to just silently try again or continue rather than ask.
+                raise SystemExit
         self.note_store = self.client.get_note_store()
         self.tag_list = self.note_store.listTags()
         self.notebooks = self.note_store.listNotebooks()
@@ -133,72 +197,10 @@ class Client:
         :return:
         """
         if sanitize is True:
-            self.add_text(self.__html_to_enml(input_html))
+            self.add_text(html_to_enml(input_html))
         else:
             self.add_text(input_html)
         return
-
-    def __html_to_enml(self, html_content):
-        """
-        Helper function for add_html method. Shouldn't need to be called by itself.
-        :param html_content: html content to add
-        :type html_content: string
-        :rtype: string
-        """
-        allowed_tags = [
-            'a',
-            'b',
-            'br',
-            'em',
-            'h1',
-            'h2',
-            'h3',
-            'h4',
-            'h5',
-            'h6',
-            'img',
-            'title',
-            'p',
-            'strong',
-            'li',
-            'ol',
-            'ul',
-            'table',
-            'tr',
-            'td',
-            'blockquote',
-            'caption',
-            'strike',
-            'big',
-            'center',
-            'cite',
-            'code'
-        ]
-        allowed_attrs = {
-            '*': ['href', 'src']
-        }
-        output_text = bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs,
-                                   strip=True)  # removes disallowed elements from document for evernote
-
-        output_text = re.sub("<br>|</br>", "<br/>", output_text)  # fixes br tag for evernote
-
-        # output_text = re.sub("[^\x00-\x9C4]", "-",
-        #                      output_text)  # need to investigate: need to exclude dashes. Is this still necessary?
-
-        output_text = re.sub('(<a href="[^http].*?</a>)', '-removed-', output_text)  # Removes invalid <a> tags
-
-        pattern = 'href=".*?"'  # wow this is ugly. Fixes subreddit linking
-        matches = re.finditer(pattern, output_text)
-        for i in matches:
-            full_match = i.group()
-            match = full_match.split('"')
-            if match[1][0:3] == '/r/':
-                output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}"'.format(match[1][3:]), output_text)
-
-        soup = BeautifulSoup(output_text, "html.parser")
-        output_text = str(soup)
-
-        return output_text
 
     def add_tag(self, *input_tags):
         """

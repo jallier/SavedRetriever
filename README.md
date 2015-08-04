@@ -1,6 +1,8 @@
 #SavedRetriever #
 
-SR is a python script that will fetch the users saved comments and posts from reddit and download them locally, as well as uploading to evernote. Authenticates using Oauth, but this needs some work. 
+SR is a python script that will fetch the users saved comments and posts from reddit and download them locally, as well as uploading to evernote. Authenticates using Oauth, but this needs some work.
+
+Requires Python 3. 
 
 ----------
 
