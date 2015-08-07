@@ -163,7 +163,8 @@ def main():
     if use_evernote is True:
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
 
-    html_index_file = html_index.index(me.name)
+    if delete_files is False:  # only create index if we're going to use it.
+        html_index_file = html_index.index(me.name)
     ind = open('index.txt', 'a')  # open index file for appending
 
     for i in me.get_saved(limit=None):  # change this limit later
@@ -341,14 +342,16 @@ def main():
 
             if not debug_mode:  # write index items normally, otherwise diasble for easier testing
                 ind.write(name + "\n")
-                html_index_file.add_link(title, file_name, permalink)
+                if delete_files is False:
+                    html_index_file.add_link(title, file_name, permalink)
             else:
                 print("\n")
 
     # end of for loop
     ind.close()
-    html_index_file.save_and_close()
-    if delete_files is True:  # try remove downloads if -t is set, but don't force it if full.
+    if delete_files is False:
+        html_index_file.save_and_close()
+    else:  # try remove downloads if -t is set, but don't force it if full.
         try:
             os.rmdir('Downloads')
         except OSError:
