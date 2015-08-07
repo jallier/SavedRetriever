@@ -8,6 +8,7 @@ import codecs
 import re
 import urllib.error
 import imgurpython.helpers.error
+import shutil
 from readability import ParserClient
 from imgurpython import ImgurClient
 from Resources import evernoteWrapper
@@ -98,8 +99,9 @@ def read_command_args():
     :rtype:
     """
     parser = argparse.ArgumentParser(description="Determine which services to use")
-    parser.add_argument('-debug', action='store_true', default=False)
-    parser.add_argument('-e', '-evernote', action='store_true', default=False)
+    parser.add_argument('-debug', action='store_true', default=False)  # debug mode on
+    parser.add_argument('-e', '-evernote', action='store_true', default=False)  # use evernote
+    parser.add_argument('-t', action='store_true', default=False)  # Temp mode. Delete html files after uploaded to evernote
     # add in an option for notebook name
     # add in an option for saving to index (independant from debugging)
     args = parser.parse_args()
@@ -129,7 +131,6 @@ def first_run():
 
 
 def main():
-    # warnings.warn('test', ResourceWarning)
     if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
         first_run()  # Authenticate and generate the credentials file.
 
@@ -140,8 +141,12 @@ def main():
     args = read_command_args()
     use_evernote = args.e
     debug_mode = args.debug
+    delete_files = args.t if use_evernote is True else False
+
     if debug_mode:
         print("Warning - Debug mode active. Files will be downloaded, but not added to index")
+    else:
+        warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
 
     me = get_reddit_user(credentials)
 
@@ -156,8 +161,7 @@ def main():
         index = []
 
     if use_evernote is True:
-        enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'],
-                                          'Saved from Reddit')  # This will need to change once EN is switched to production
+        enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
 
     html_index_file = html_index.index(me.name)
     ind = open('index.txt', 'a')  # open index file for appending
@@ -181,7 +185,8 @@ def main():
 
                 # html output
                 output = html_output_string(permalink, author, body)
-                file_name = html_writer(name, output)
+                if delete_files is False:
+                    file_name = html_writer(name, output)
 
                 # en api section
                 if use_evernote is True:
@@ -196,7 +201,8 @@ def main():
 
                 # html output
                 output = html_output_string(permalink, author, text)
-                file_name = html_writer(name, output)
+                if delete_files is False:
+                    file_name = html_writer(name, output)
 
                 # en api section
                 if use_evernote is True:
@@ -223,11 +229,10 @@ def main():
                     if filename.split('.')[-1] == 'pdf':
                         img = '<a href="{}">Click here for link to downloaded pdf</a>'.format(base_filename)
                     else:
-                        img = "{}<br><br><img src='{}'>".format(i.title, base_filename)  # html for embedding in html file
+                        img = '{0}<br><br><a href="{1}"><img src="{1}"></a>'.format(i.title,
+                                                                                    base_filename)  # html for embedding in html file
                 else:
                     img = "Image failed to download - It may be temporarily or permanently unavailable"
-
-                file_name = html_writer(name, html_output_string(permalink, author, img))
 
                 # Evernote api section
                 if use_evernote is True:
@@ -238,6 +243,11 @@ def main():
                         enclient.add_resource(filename)
                     note = enclient.create_note()
                     print(note.guid)
+
+                if delete_files is False:
+                    file_name = html_writer(name, html_output_string(permalink, author, img))
+                else:
+                    os.remove(filename)
             elif hasattr(i, 'url') and 'imgur' in i.url:  # is imgur album. Add option to download images to folder.
                 url = i.url
                 body = "<h2>{}</h2>".format(title)
@@ -269,13 +279,14 @@ def main():
                     image_link = image.link
                     # sets up downloaded filename and html for embedding image
                     base_filename = "{}_image.{}".format(image_id, image_filetype)
-                    img = "<p><h3>{}</h3><img src=\"{}/{}\"><br/>{}</p>".format(image_name, gallery_id, base_filename,
-                                                                                image_description)
+                    img = '<p><h3>{0}</h3><a href="{1}/{2}"><img src="{1}/{2}"></a><br/>{3}</p>'.format(image_name,
+                                                                                                        gallery_id,
+                                                                                                        base_filename,
+                                                                                                        image_description)
                     filename = path + "/" + base_filename
                     if not os.path.exists(filename):  # only download if file doesn't already exist
                         image_saver(image_link, filename)
                     body += img
-                file_name = html_writer(name, html_output_string(permalink, author, body))
 
                 # Evernote api section
                 if use_evernote is True:
@@ -290,6 +301,11 @@ def main():
                                                              '<a href="{}">here</a> for the original link.'.format(url)))
                     note = enclient.create_note()
                     print(note.guid)
+
+                if delete_files is False:
+                    file_name = html_writer(name, html_output_string(permalink, author, body))
+                else:
+                    shutil.rmtree(path)
 
             elif hasattr(i, 'title') and i.is_self is False:  # is article
                 # This section needs work. It is semi-complete. Ultimately, adding in the full article is the goal.
@@ -306,7 +322,8 @@ def main():
 
                 # html output section.
                 output = html_output_string(permalink, author, article)
-                file_name = html_writer(name, output)
+                if delete_files is False:
+                    file_name = html_writer(name, output)
 
                 # Evernote section
                 if use_evernote is True:
@@ -331,7 +348,11 @@ def main():
     # end of for loop
     ind.close()
     html_index_file.save_and_close()
-
+    if delete_files is True:  # try remove downloads if -t is set, but don't force it if full.
+        try:
+            os.rmdir('Downloads')
+        except OSError:
+            pass
 
 if __name__ == '__main__':
     with warnings.catch_warnings():  # This is to ignore ssl socket unclosed warnings.
