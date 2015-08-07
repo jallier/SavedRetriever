@@ -38,7 +38,7 @@ The following commandline switches are available:
 
 - -e, -evernote: when present, SR will attempt to upload saved items to evernote.
 - -debug: when present, items will not be added to the index, to allow for easier testing
-- -t: When present, SR will delete any files it downloads. Only available when using evernote
+- -t: When present, SR will delete any files it downloads once it has uploaded them to evernote. Only available when using evernote
 
 ##3rd Party libraries##
 SR uses the following 3rd party libraries:
