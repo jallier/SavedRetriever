@@ -216,11 +216,11 @@ def main():
             elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif', 'gifv', 'pdf']:  # is direct image.
                 """
                 Need to check file types and test pdf. How does this handle gfycat and webm? Can EN display that inline?
-                The horrendous regex in the if is to strip out non-valid filetype chars. Shudder
+                The regex in the if is to strip out non-valid filetype chars.
                 """
                 url = i.url
                 base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
-                    -1]))  # filename for image. Ugly regex same as above.
+                    -1]))  # filename for image. regex same as above.
                 filename = "Downloads/" + base_filename
 
                 # image downloader section
