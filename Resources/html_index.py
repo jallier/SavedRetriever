@@ -22,6 +22,7 @@ class index:
                 "<head><style>\n"
                 "img {{max-width:100%;}}body {{font-family: Calibri;}}\n"
                 "</style></head>\n"
+                "<title>saved by {0}</title>\n"
                 "<h3>Index of files saved by <a href=\"http://www.reddit.com/user/{0}\">/u/{0}</a></h3>\n"
                 "<ul>\n".format(username)
             )  # This is not completely valid html, as the <ul> tag will not be closed; most web browsers should

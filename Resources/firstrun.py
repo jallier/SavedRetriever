@@ -10,7 +10,8 @@ def authenticate_reddit():
     print("Before you can complete this authentication you must register the app at https://www.reddit.com/prefs/apps/")
     client_id = input("Client ID: ")
     client_secret = input("Client Secret: ")
-    redirect_uri = input("Redirect URI (set to http://127.0.0.1:65010/authorize_callback): ")
+    redirect_uri = input("Redirect URI (press enter for http://127.0.0.1:65010/authorize_callback): ")
+    redirect_uri = 'http://127.0.0.1:65010/authorize_callback' if redirect_uri == '' else redirect_uri
     scope = 'identity history read'
 
     r = praw.Reddit('easy-oauth.py client',
