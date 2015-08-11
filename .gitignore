@@ -6,3 +6,5 @@ index.txt
 *.jpg
 *.html
 test.py
+SavedRetriever.egg-info/
+dist/

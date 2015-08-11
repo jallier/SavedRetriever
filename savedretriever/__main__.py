@@ -1,5 +1,4 @@
 import warnings
-import praw
 import json
 import urllib.request
 import os
@@ -7,13 +6,14 @@ import argparse
 import codecs
 import re
 import urllib.error
-import imgurpython.helpers.error
 import shutil
+import praw
+import imgurpython.helpers.error
 from readability import ParserClient
 from imgurpython import ImgurClient
-from Resources import evernoteWrapper
-from Resources import firstrun
-from Resources import html_index
+from savedretriever.Resources import evernoteWrapper
+from savedretriever.Resources import firstrun
+from savedretriever.Resources import html_index
 
 """
 Retreives saved content from reddit.

@@ -1,0 +1,13 @@
+README
+setup.py
+SavedRetriever.egg-info/PKG-INFO
+SavedRetriever.egg-info/SOURCES.txt
+SavedRetriever.egg-info/dependency_links.txt
+SavedRetriever.egg-info/requires.txt
+SavedRetriever.egg-info/top_level.txt
+savedretriever/__init__.py
+savedretriever/__main__.py
+savedretriever/Resources/__init__.py
+savedretriever/Resources/evernoteWrapper.py
+savedretriever/Resources/firstrun.py
+savedretriever/Resources/html_index.py
