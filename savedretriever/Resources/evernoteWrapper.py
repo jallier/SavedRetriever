@@ -107,8 +107,11 @@ class Client:
 
         self.note = None
 
-    def new_note(self, title):  # Should this be a separate class?
+    def new_note(self, input_title):  # Should this be a separate class?
         self.note = Types.Note()
+        title = input_title
+        if title.endswith(' '):  # Spaces at the end seem to prevent the note uploading, so this works around that.
+            title = title[:-1]
         self.note.title = (title[:252] + "...") if len(title) > 252 else title  # truncates title length to fit evernote. Thanks SO.
         self.note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM ' \
                             '"http://xml.evernote.com/pub/enml2.dtd"><en-note>'
