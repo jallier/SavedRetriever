@@ -9,6 +9,7 @@ import urllib.error
 import shutil
 import praw
 import imgurpython.helpers.error
+import time
 from readability import ParserClient
 from imgurpython import ImgurClient
 from savedretriever.Resources import evernoteWrapper
@@ -75,23 +76,6 @@ def image_saver(url, filename):
     return True
 
 
-def get_reddit_user(credentials):
-    client_id = credentials['reddit']['client_id']
-    client_secret = credentials['reddit']['client_secret']
-    redirect_uri = credentials['reddit']['redirect_uri']
-    refresh_token = credentials['reddit']['refresh_token']
-    user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
-
-    r = praw.Reddit(user_agent=user_agent,
-                    oauth_client_id=client_id,
-                    oauth_client_secret=client_secret,
-                    oauth_redirect_uri=redirect_uri)
-
-    access_information = r.refresh_access_information(refresh_token)
-    r.set_access_credentials(**access_information)
-    return r.get_me()
-
-
 def read_command_args():
     """
     Reads commandline switches and returns an object containing the values of the switches
@@ -148,7 +132,21 @@ def main():
     else:
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
 
-    me = get_reddit_user(credentials)
+    # Authenticate with Reddit
+    client_id = credentials['reddit']['client_id']
+    client_secret = credentials['reddit']['client_secret']
+    redirect_uri = credentials['reddit']['redirect_uri']
+    refresh_token = credentials['reddit']['refresh_token']
+    user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
+
+    r = praw.Reddit(user_agent=user_agent,
+                    oauth_client_id=client_id,
+                    oauth_client_secret=client_secret,
+                    oauth_redirect_uri=redirect_uri)
+
+    access_information = r.refresh_access_information(refresh_token)
+    r.set_access_credentials(**access_information)
+    time_since_accesstoken = time.time()
 
     if not os.path.exists("Downloads"):
         os.makedirs("Downloads")
@@ -164,19 +162,20 @@ def main():
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
 
     if delete_files is False:  # only create index if we're going to use it.
-        html_index_file = html_index.index(me.name)
-    ind = open('index.txt', 'a')  # open index file for appending
+        html_index_file = html_index.index(r.get_me().name)
 
-    for i in me.get_saved(limit=None):  # change this limit later
+    ind = open('index.txt', 'a')  # open index file for appending
+    for i in r.get_me().get_saved(limit=None):
+        if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
+            r.refresh_access_information(access_information['refresh_token'])
+            time_since_accesstoken = time.time()
+
         name = i.name
         file_name = name  # to stop ide complaining.
+        note = None
         evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
 
         if name not in index:  # file has not been downloaded
-            if debug_mode is True:
-                print(name)
-                print(dir(i))
-
             permalink = i.permalink
             author = i.author
             title = i.link_title if hasattr(i, 'link_title') else i.title
@@ -195,7 +194,6 @@ def main():
                     enclient.add_html(output)
                     enclient.add_tag(*evernote_tags)  # the * is very important. It unpacks the tags tuple properly
                     note = enclient.create_note()
-                    # print(note.guid)
 
             elif hasattr(i, 'is_self') and i.is_self is True:  # is self post
                 text = i.selftext_html
@@ -211,7 +209,6 @@ def main():
                     enclient.add_tag(*evernote_tags)
                     enclient.add_html(output)
                     note = enclient.create_note()
-                    # print(note.guid)
 
             elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif', 'gifv', 'pdf']:  # is direct image.
                 """
@@ -243,7 +240,6 @@ def main():
                     if image_downloaded:
                         enclient.add_resource(filename)
                     note = enclient.create_note()
-                    # print(note.guid)
 
                 if delete_files is False:
                     file_name = html_writer(name, html_output_string(permalink, author, img))
@@ -301,7 +297,6 @@ def main():
                                                              'This album is too large to embed; please see '
                                                              '<a href="{}">here</a> for the original link.'.format(url)))
                     note = enclient.create_note()
-                    # print(note.guid)
 
                 if delete_files is False:
                     file_name = html_writer(name, html_output_string(permalink, author, body))
@@ -336,18 +331,18 @@ def main():
                     # Add html file to note
                     # enclient.add_resource("Downloads/{}.html".format(name))
                     note = enclient.create_note()
-                    # print(note.guid)
 
             # end of checking for saved items #
 
             if not debug_mode:  # write index items normally, otherwise diasble for easier testing
                 ind.write(name + "\n")
                 ind.flush()  # this fixes python not writing the file if it terminates before .close() can be called
-                print("Saved " + name + note.guid)
                 if delete_files is False:
                     html_index_file.add_link(title, file_name, permalink)
+            if use_evernote is True and note is not None:
+                print("Saved {} - GUID: {}".format(name, note.guid))
             else:
-                print("\n")
+                print("Saved " + name)
 
     # end of for loop
     ind.close()
