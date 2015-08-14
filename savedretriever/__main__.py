@@ -195,7 +195,7 @@ def main():
                     enclient.add_html(output)
                     enclient.add_tag(*evernote_tags)  # the * is very important. It unpacks the tags tuple properly
                     note = enclient.create_note()
-                    print(note.guid)
+                    # print(note.guid)
 
             elif hasattr(i, 'is_self') and i.is_self is True:  # is self post
                 text = i.selftext_html
@@ -211,7 +211,7 @@ def main():
                     enclient.add_tag(*evernote_tags)
                     enclient.add_html(output)
                     note = enclient.create_note()
-                    print(note.guid)
+                    # print(note.guid)
 
             elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif', 'gifv', 'pdf']:  # is direct image.
                 """
@@ -243,7 +243,7 @@ def main():
                     if image_downloaded:
                         enclient.add_resource(filename)
                     note = enclient.create_note()
-                    print(note.guid)
+                    # print(note.guid)
 
                 if delete_files is False:
                     file_name = html_writer(name, html_output_string(permalink, author, img))
@@ -301,7 +301,7 @@ def main():
                                                              'This album is too large to embed; please see '
                                                              '<a href="{}">here</a> for the original link.'.format(url)))
                     note = enclient.create_note()
-                    print(note.guid)
+                    # print(note.guid)
 
                 if delete_files is False:
                     file_name = html_writer(name, html_output_string(permalink, author, body))
@@ -336,12 +336,14 @@ def main():
                     # Add html file to note
                     # enclient.add_resource("Downloads/{}.html".format(name))
                     note = enclient.create_note()
-                    print(note.guid)
+                    # print(note.guid)
 
             # end of checking for saved items #
 
             if not debug_mode:  # write index items normally, otherwise diasble for easier testing
                 ind.write(name + "\n")
+                ind.flush()  # this fixes python not writing the file if it terminates before .close() can be called
+                print("Saved " + name + note.guid)
                 if delete_files is False:
                     html_index_file.add_link(title, file_name, permalink)
             else:
@@ -351,7 +353,7 @@ def main():
     ind.close()
     if delete_files is False:
         html_index_file.save_and_close()
-    else:  # try remove downloads if -t is set, but don't force it if full.
+    else:  # try remove downloads if -t is set, but don't force it if directory has things in it already.
         try:
             os.rmdir('Downloads')
         except OSError:
