@@ -157,7 +157,8 @@ class Client:
         resource = Types.Resource()
         resource.mime = mime_type
         resource.data = data
-        resource.fileName = filename
+        resource.attributes = Types.ResourceAttributes()
+        resource.attributes.fileName = filename
         # resource.attachment = True
 
         if not self.note.resources:
