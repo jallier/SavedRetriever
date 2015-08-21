@@ -333,18 +333,20 @@ def main():
                     note = enclient.create_note()
 
             # end of checking for saved items #
-
-            if not debug_mode:  # write index items normally, otherwise diasble for easier testing
+            failed_upload = False
+            if use_evernote is True:
+                if note is not None:
+                    print("Saved {:9} - GUID: {}".format(name, note.guid))
+                else:  # Upload failed
+                    print("Saved {:9} - Note failed to upload".format(name))
+                    failed_upload = True
+            elif use_evernote is False:
+                print("Saved " + name)
+            if not debug_mode and not failed_upload:
                 ind.write(name + "\n")
                 ind.flush()  # this fixes python not writing the file if it terminates before .close() can be called
                 if delete_files is False:
                     html_index_file.add_link(title, file_name, permalink)
-            if use_evernote is True and note is not None:
-                print("Saved {:9} - GUID: {}".format(name, note.guid))
-            elif use_evernote is True:
-                print("Saved {:9} - Note failed to upload".format(name))
-            else:  # is debug mode
-                print("Saved " + name)
 
     # end of for loop
     ind.close()
