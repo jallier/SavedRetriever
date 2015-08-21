@@ -340,8 +340,10 @@ def main():
                 if delete_files is False:
                     html_index_file.add_link(title, file_name, permalink)
             if use_evernote is True and note is not None:
-                print("Saved {} - GUID: {}".format(name, note.guid))
-            else:
+                print("Saved {:9} - GUID: {}".format(name, note.guid))
+            elif use_evernote is True:
+                print("Saved {:9} - Note failed to upload".format(name))
+            else:  # is debug mode
                 print("Saved " + name)
 
     # end of for loop
