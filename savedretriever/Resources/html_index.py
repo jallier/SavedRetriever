@@ -8,7 +8,7 @@ class index:
     This class generates an index file of the saved links so that they can be easily viewed in a browser.
     If the index file does not exist, it will create it. Each item that is added is appended as part of an unordered list, with the title (which is a link to the downloaded item) and a link to the permalink of the saved item.
     """
-    def __init__(self, username):
+    def __init__(self, username, path):
         """
         Opens the index file, or creates it and adds initial html.
         :param username:
@@ -16,8 +16,9 @@ class index:
         :return:
         :rtype:
         """
-        if not os.path.isfile('Downloads/_index.html'):
-            self.file = open('Downloads/_index.html', 'a')  # create index for writing.
+        path += '/_index.html'
+        if not os.path.isfile(path):
+            self.file = open(path, 'a')  # create index for writing.
             self.file.write(
                 "<head><style>\n"
                 "img {{max-width:100%;}}body {{font-family: Calibri;}}\n"
@@ -28,7 +29,7 @@ class index:
             )  # This is not completely valid html, as the <ul> tag will not be closed; most web browsers should
             # ignore this and render the page properly.
         else:
-            self.file = open('Downloads/_index.html', 'a')  # otherwise open for appending without initial html
+            self.file = open(path, 'a')  # otherwise open for appending without initial html
 
     def add_link(self, title, local_url, remote_url):
         """

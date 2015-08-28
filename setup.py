@@ -1,10 +1,8 @@
-__author__ = 'Justin'
-
 from setuptools import setup
 
 setup(
     name='SavedRetriever',
-    version='1.0.1',
+    version='1.0.2',
     author='hallj',
     author_email='fuzzy_cut@hotmail.com',
     packages=['savedretriever.Resources', 'savedretriever'],
