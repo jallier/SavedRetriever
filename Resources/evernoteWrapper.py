@@ -84,7 +84,7 @@ class Client:
         """
         client = None
         try:  # Should make sandbox a debug option
-            self.client = EvernoteClient(token=token, sandbox=False)
+            client = EvernoteClient(token=token, sandbox=False)
         except evernote.edam.error.ttypes.EDAMUserException:
             print("Please provide correct evernote credentials")
             if input("Abort (y/n): ") == 'y':  # Might be best to just silently try again or continue rather than ask.
