@@ -137,7 +137,7 @@ def main():
         path = path[0]
     else:
         path = os.getcwd()
-    path += "\Downloads"
+    path += "/Downloads"
 
     if not os.path.exists(path):
         os.makedirs(path)
