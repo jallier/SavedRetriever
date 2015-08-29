@@ -1,7 +1,5 @@
 import os
 
-__author__ = 'Justin'
-
 
 class index:
     """
@@ -27,7 +25,7 @@ class index:
                 "<h3>Index of files saved by <a href=\"http://www.reddit.com/user/{0}\">/u/{0}</a></h3>\n"
                 "<ul>\n".format(username)
             )  # This is not completely valid html, as the <ul> tag will not be closed; most web browsers should
-            # ignore this and render the page properly.
+            #    ignore this and render the page properly.
         else:
             self.file = open(path, 'a')  # otherwise open for appending without initial html
 

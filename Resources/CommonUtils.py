@@ -1,5 +1,3 @@
-__author__ = 'Justin'
-
 
 class Utils:
     """
@@ -18,8 +16,7 @@ class Utils:
         """
         for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
             if abs(num) < 1024.0:
-                # return "%3.1f %s%s" % (num, unit, suffix)
                 return "{:3.2f} {}{}".format(num, unit, suffix)
             num /= 1024.0
-        # return "%.1f%s%s" % (num, 'Yi', suffix) # changed to newer formatting style.
+        # changed to newer formatting style.
         return "{:.1f} {}{}".format(num, 'Yi', suffix)

@@ -1,4 +1,4 @@
--e SavedRetriever#egg=SavedRetriever
+#SavedRetriever
 praw >= 3.0.0
 bleach >= 1.4.1
 readability-api >= 1.0.0

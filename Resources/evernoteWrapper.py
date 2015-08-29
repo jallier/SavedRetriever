@@ -1,4 +1,3 @@
-# import evernote.edam.userstore.constants as UserStoreConstants
 import datetime
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
