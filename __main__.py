@@ -12,9 +12,9 @@ import imgurpython.helpers.error
 import time
 from readability import ParserClient
 from imgurpython import ImgurClient
-from savedretriever.Resources import evernoteWrapper
-from savedretriever.Resources import firstrun
-from savedretriever.Resources import html_index
+from Resources import evernoteWrapper
+from Resources import firstrun
+from Resources import html_index
 
 """
 Retreives saved content from reddit.

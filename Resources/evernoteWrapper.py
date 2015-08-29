@@ -8,7 +8,7 @@ import binascii
 import re
 import bleach
 from bs4 import BeautifulSoup
-from savedretriever.Resources.CommonUtils import Utils
+from Resources.CommonUtils import Utils
 
 
 def html_to_enml(html_content):
