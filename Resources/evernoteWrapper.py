@@ -1,4 +1,4 @@
-# import evernote.edam.userstore.constants as UserStoreConstants
+import datetime
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
 import evernote.edam.error
@@ -7,6 +7,7 @@ import binascii
 import re
 import bleach
 from bs4 import BeautifulSoup
+from Resources.CommonUtils import Utils
 
 
 def html_to_enml(html_content):
@@ -75,23 +76,30 @@ def html_to_enml(html_content):
 class Client:
     def __init__(self, token, notebook_name='default'):
         """
-
+        Initializes the evernote client for uploading notes.
         :param token: the developer token needed for access to the account
         :type token: string
         :param notebook_name: name of notebook to add the new notes to.
         :type notebook_name: string
         """
+        client = None
         try:  # Should make sandbox a debug option
             self.client = EvernoteClient(token=token, sandbox=False)
         except evernote.edam.error.ttypes.EDAMUserException:
             print("Please provide correct evernote credentials")
             if input("Abort (y/n): ") == 'y':  # Might be best to just silently try again or continue rather than ask.
                 raise SystemExit
-        self.note_store = self.client.get_note_store()
+        self.user_store = client.get_user_store()
+        self.note_store = client.get_note_store()
         self.tag_list = self.note_store.listTags()
         self.notebooks = self.note_store.listNotebooks()
         self.notebook_name = notebook_name  # for use in other functions.
         self.notebook_guid = None
+        self.error_count = 0
+        self.warning_count = 0
+
+        self.quota_remaining()
+
         if notebook_name != 'default':  # ie we want to specify the notebook to save the notes to
             notebook_dic = {}
             for notebook in self.notebooks:  # create dict of notebook names: notebook objects
@@ -107,8 +115,11 @@ class Client:
 
         self.note = None
 
-    def new_note(self, title):  # Should this be a separate class?
+    def new_note(self, input_title):  # Should this be a separate class?
         self.note = Types.Note()
+        title = input_title
+        if title.endswith(' '):  # Spaces at the end seem to prevent the note uploading, so this works around that.
+            title = title[:-1]
         self.note.title = (title[:252] + "...") if len(title) > 252 else title  # truncates title length to fit evernote. Thanks SO.
         self.note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM ' \
                             '"http://xml.evernote.com/pub/enml2.dtd"><en-note>'
@@ -154,7 +165,8 @@ class Client:
         resource = Types.Resource()
         resource.mime = mime_type
         resource.data = data
-        resource.fileName = filename
+        resource.attributes = Types.ResourceAttributes()
+        resource.attributes.fileName = filename
         # resource.attachment = True
 
         if not self.note.resources:
@@ -168,6 +180,26 @@ class Client:
         self.note.content += '<en-media type="{}" hash="{}"/><br/>'.format(mime_type, hash_str)
         return
 
+    def quota_remaining(self, upload_failed=False):
+        user = self.user_store.getUser()
+        state = self.note_store.getSyncState()
+
+        total_monthly_quota = user.accounting.uploadLimit
+        used_so_far = state.uploaded
+        quota_remaining = total_monthly_quota - used_so_far
+
+        FIVE_MEGABYTES = 5242880
+        if upload_failed and self.error_count == 0:
+            reset_date = datetime.datetime.fromtimestamp(user.accounting.uploadLimitEnd / 1000.0)
+            today = datetime.datetime.today()
+            print("Upload failed - Upload quota exceeded. Data allowance resets in {} days".format(
+                (reset_date - today).days))
+            self.error_count += 1
+        elif quota_remaining < FIVE_MEGABYTES and self.warning_count == 0:
+            print("\nWarning! You have less than 5 MB of evernote upload data remaining. Data remaining: {}\n".format(
+                Utils.human_readable_filesize(quota_remaining)))
+            self.warning_count += 1
+
     def create_note(self):
         """
         Adds the completed note to the default evernote notebook.
@@ -175,11 +207,16 @@ class Client:
         :rtype: Types.Note
         """
         self.note.content += '</en-note>'  # enml closing tag
+        created_note = None
         try:
             created_note = self.note_store.createNote(self.note)  # this may result in errors if malformed xml
-        except:
-            print(self.note)
-            raise
+        except evernote.edam.error.ttypes.EDAMUserException as error:
+            if error.errorCode == 7:
+                self.quota_remaining(upload_failed=True)
+                # add option to continue downloading locally, or just wait until the next month.
+            else:
+                print(self.note)
+                raise
         self.note = None  # resets note. This is because im unsure how python handles objects in a for loop
         return created_note
 

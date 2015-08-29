@@ -1,5 +1,4 @@
 import warnings
-import praw
 import json
 import urllib.request
 import os
@@ -7,8 +6,10 @@ import argparse
 import codecs
 import re
 import urllib.error
-import imgurpython.helpers.error
 import shutil
+import praw
+import imgurpython.helpers.error
+import time
 from readability import ParserClient
 from imgurpython import ImgurClient
 from Resources import evernoteWrapper
@@ -17,26 +18,24 @@ from Resources import html_index
 
 """
 Retreives saved content from reddit.
-
-TODO:
-    - Optimise code
-    - Check EN if note exists?
-    - Dropbox support?
-    - Investigate using Goose to parse articles.
-    - Fix the random ssl errors
-    - Fix unicode errors
 """
 
 
-def html_writer(file, output):
+def html_writer(path, file, output):
     """
     Writes an html file.
-
-    Takes: the name of the file to write and the content (string) to write.
-    Returns: the relative path of the downloaded file. (Relative to location of script)
+    :param path: Path to write file to
+    :type path: str
+    :param file: Name of the file to write
+    :type file: str
+    :param output: html content to write
+    :type output: str
+    :return: name of file written
+    :rtype: str
     """
-    file_name = "Downloads/{}.html".format(file)
     name = file + ".html"
+    file_name = "{}/{}".format(path, name)
+
     f = codecs.open(file_name, 'w', 'utf-8')
     # CSS styling for images. Does not affect text
     html_image_size = "<head>\n<style>\nimg {max-width:100%;}\n</style>\n</head>\n"
@@ -75,23 +74,6 @@ def image_saver(url, filename):
     return True
 
 
-def get_reddit_user(credentials):
-    client_id = credentials['reddit']['client_id']
-    client_secret = credentials['reddit']['client_secret']
-    redirect_uri = credentials['reddit']['redirect_uri']
-    refresh_token = credentials['reddit']['refresh_token']
-    user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
-
-    r = praw.Reddit(user_agent=user_agent,
-                    oauth_client_id=client_id,
-                    oauth_client_secret=client_secret,
-                    oauth_redirect_uri=redirect_uri)
-
-    access_information = r.refresh_access_information(refresh_token)
-    r.set_access_credentials(**access_information)
-    return r.get_me()
-
-
 def read_command_args():
     """
     Reads commandline switches and returns an object containing the values of the switches
@@ -102,6 +84,7 @@ def read_command_args():
     parser.add_argument('-debug', action='store_true', default=False)  # debug mode on
     parser.add_argument('-e', '-evernote', action='store_true', default=False)  # use evernote
     parser.add_argument('-t', action='store_true', default=False)  # Temp mode. Delete html files after uploaded to evernote
+    parser.add_argument('-p', '-path', nargs=1, default='')
     # add in an option for notebook name
     # add in an option for saving to index (independant from debugging)
     args = parser.parse_args()
@@ -116,7 +99,7 @@ def first_run():
     """
     reddit = firstrun.authenticate_reddit()
     evernote_dic = {"consumer_key": "your_key_here", "consumer_secret": "your_secret_here",
-                    "dev_token": "this can stay blank"}
+                    "dev_token": "Use this token"}
     imgur = {"client_id": "your_id_here", "client_secret": "your_secret_here"}
     readability = {"parser_key": "your_key_here"}
 
@@ -142,16 +125,38 @@ def main():
     use_evernote = args.e
     debug_mode = args.debug
     delete_files = args.t if use_evernote is True else False
+    path = args.p
 
     if debug_mode:
         print("Warning - Debug mode active. Files will be downloaded, but not added to index")
     else:
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
 
-    me = get_reddit_user(credentials)
+    # Create the downloads folder on the specified path, or in the dir where file is stored.
+    if path is not "":
+        path = path[0]
+    else:
+        path = os.getcwd()
+    path += "/SRDownloads"
 
-    if not os.path.exists("Downloads"):
-        os.makedirs("Downloads")
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    # Authenticate with Reddit
+    client_id = credentials['reddit']['client_id']
+    client_secret = credentials['reddit']['client_secret']
+    redirect_uri = credentials['reddit']['redirect_uri']
+    refresh_token = credentials['reddit']['refresh_token']
+    user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
+
+    r = praw.Reddit(user_agent=user_agent,
+                    oauth_client_id=client_id,
+                    oauth_client_secret=client_secret,
+                    oauth_redirect_uri=redirect_uri)
+
+    access_information = r.refresh_access_information(refresh_token)
+    r.set_access_credentials(**access_information)
+    time_since_accesstoken = time.time()
 
     if os.path.isfile('index.txt'):  # checking for  index file, which contains index of downloaded files.
         with open('index.txt', 'r') as ind:
@@ -164,30 +169,33 @@ def main():
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
 
     if delete_files is False:  # only create index if we're going to use it.
-        html_index_file = html_index.index(me.name)
-    ind = open('index.txt', 'a')  # open index file for appending
+        html_index_file = html_index.index(r.get_me().name, path)
 
-    for i in me.get_saved(limit=None):  # change this limit later
+    ind = open('index.txt', 'a')  # open index file for appending
+    for i in r.get_me().get_saved(limit=None):
+        if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
+            r.refresh_access_information(access_information['refresh_token'])
+            time_since_accesstoken = time.time()
+
         name = i.name
         file_name = name  # to stop ide complaining.
+        note = None
         evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
 
         if name not in index:  # file has not been downloaded
-            if debug_mode is True:
-                print(name)
-                print(dir(i))
-
             permalink = i.permalink
             author = i.author
             title = i.link_title if hasattr(i, 'link_title') else i.title
-
-            if hasattr(i, 'body_html'):  # is comment
+            # ========== #
+            # IS COMMENT #
+            # ========== #
+            if hasattr(i, 'body_html'):
                 body = i.body_html
 
                 # html output
                 output = html_output_string(permalink, author, body)
                 if delete_files is False:
-                    file_name = html_writer(name, output)
+                    file_name = html_writer(path, name, output)
 
                 # en api section
                 if use_evernote is True:
@@ -195,15 +203,16 @@ def main():
                     enclient.add_html(output)
                     enclient.add_tag(*evernote_tags)  # the * is very important. It unpacks the tags tuple properly
                     note = enclient.create_note()
-                    print(note.guid)
-
-            elif hasattr(i, 'is_self') and i.is_self is True:  # is self post
+            # ============ #
+            # IS SELF-POST #
+            # ============ #
+            elif hasattr(i, 'is_self') and i.is_self is True:
                 text = i.selftext_html
 
                 # html output
                 output = html_output_string(permalink, author, text)
                 if delete_files is False:
-                    file_name = html_writer(name, output)
+                    file_name = html_writer(path, name, output)
 
                 # en api section
                 if use_evernote is True:
@@ -211,9 +220,10 @@ def main():
                     enclient.add_tag(*evernote_tags)
                     enclient.add_html(output)
                     note = enclient.create_note()
-                    print(note.guid)
-
-            elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif', 'gifv', 'pdf']:  # is direct image.
+            # ====================== #
+            # IS DIRECT LINKED IMAGE #
+            # ====================== #
+            elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif', 'gifv', 'pdf']:
                 """
                 Need to check file types and test pdf. How does this handle gfycat and webm? Can EN display that inline?
                 The regex in the if is to strip out non-valid filetype chars.
@@ -221,7 +231,7 @@ def main():
                 url = i.url
                 base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
                     -1]))  # filename for image. regex same as above.
-                filename = "Downloads/" + base_filename
+                filename = path + "/" + base_filename
 
                 # image downloader section
                 image_downloaded = image_saver(url, filename)
@@ -243,13 +253,15 @@ def main():
                     if image_downloaded:
                         enclient.add_resource(filename)
                     note = enclient.create_note()
-                    print(note.guid)
 
                 if delete_files is False:
-                    file_name = html_writer(name, html_output_string(permalink, author, img))
+                    file_name = html_writer(path, name, html_output_string(permalink, author, img))
                 else:
                     os.remove(filename)
-            elif hasattr(i, 'url') and 'imgur' in i.url:  # is imgur album. Add option to download images to folder.
+            # ============== #
+            # IS IMGUR ALBUM #
+            # ============== #
+            elif hasattr(i, 'url') and 'imgur' in i.url:  # Add option to download images to folder.
                 url = i.url
                 body = "<h2>{}</h2>".format(title)
 
@@ -269,9 +281,10 @@ def main():
                         if debug_mode is True or error.status_code != 404:
                             print("**{} - {}**".format(error.status_code, error.error_message))
 
-                path = 'Downloads/{}'.format(gallery_id)
-                if not os.path.exists(path):
-                    os.makedirs(path)
+                # img_path = 'Downloads/{}'.format(gallery_id)
+                img_path = path + "/" + gallery_id
+                if not os.path.exists(img_path):
+                    os.makedirs(img_path)
                 for image in gallery:  # add if gallery > 10, then just add a link (would be too large for the note)
                     image_name = image.title if image.title is not None else ""
                     image_description = image.description if image.description is not None else ""
@@ -284,7 +297,7 @@ def main():
                                                                                                         gallery_id,
                                                                                                         base_filename,
                                                                                                         image_description)
-                    filename = path + "/" + base_filename
+                    filename = img_path + "/" + base_filename
                     if not os.path.exists(filename):  # only download if file doesn't already exist
                         image_saver(image_link, filename)
                     body += img
@@ -301,19 +314,22 @@ def main():
                                                              'This album is too large to embed; please see '
                                                              '<a href="{}">here</a> for the original link.'.format(url)))
                     note = enclient.create_note()
-                    print(note.guid)
 
                 if delete_files is False:
-                    file_name = html_writer(name, html_output_string(permalink, author, body))
+                    file_name = html_writer(path, name, html_output_string(permalink, author, body))
                 else:
-                    shutil.rmtree(path)
-
-            elif hasattr(i, 'title') and i.is_self is False:  # is article
+                    shutil.rmtree(img_path)
+            # ========== #
+            # IS ARTICLE #
+            # ========== #
+            elif hasattr(i, 'title') and i.is_self is False:
                 # This section needs work. It is semi-complete. Ultimately, adding in the full article is the goal.
                 url = i.url
 
                 # readability api section
-                parse = ParserClient(credentials['readability']['parser_key'])
+                os.environ["READABILITY_PARSER_TOKEN"] = credentials['readability'][
+                    'parser_key']  # set the environment variable as the parser key
+                parse = ParserClient()  # readability api doesn't take the token directly
                 parse_response = parse.get_article(url)
                 article = parse_response.json()
                 if 'content' not in article:  # if unable to parse document, manually set an error message
@@ -324,7 +340,7 @@ def main():
                 # html output section.
                 output = html_output_string(permalink, author, article)
                 if delete_files is False:
-                    file_name = html_writer(name, output)
+                    file_name = html_writer(path, name, output)
 
                 # Evernote section
                 if use_evernote is True:
@@ -336,22 +352,28 @@ def main():
                     # Add html file to note
                     # enclient.add_resource("Downloads/{}.html".format(name))
                     note = enclient.create_note()
-                    print(note.guid)
 
             # end of checking for saved items #
-
-            if not debug_mode:  # write index items normally, otherwise diasble for easier testing
+            failed_upload = False
+            if use_evernote is True:
+                if note is not None:
+                    print("Saved {:9} - GUID: {}".format(name, note.guid))
+                else:  # Upload failed
+                    print("Saved {:9} - Note failed to upload".format(name))
+                    failed_upload = True
+            elif use_evernote is False:
+                print("Saved " + name)
+            if not debug_mode and not failed_upload:
                 ind.write(name + "\n")
+                ind.flush()  # this fixes python not writing the file if it terminates before .close() can be called
                 if delete_files is False:
                     html_index_file.add_link(title, file_name, permalink)
-            else:
-                print("\n")
 
     # end of for loop
     ind.close()
     if delete_files is False:
         html_index_file.save_and_close()
-    else:  # try remove downloads if -t is set, but don't force it if full.
+    else:  # try remove downloads if -t is set, but don't force it if directory has things in it already.
         try:
             os.rmdir('Downloads')
         except OSError:
