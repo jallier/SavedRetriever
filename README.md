@@ -23,7 +23,9 @@ Once the folder is downloaded:
 
  4. This will interactively authenticate with reddit and generate the config file. From there, edit the config so that the relevant access tokens are filled in. See the list of services below for where to get them.
  5. The script can then be run normally and will use the provided tokens. eg
+
 	> python SavedRetriever -e -p /home/Downloads/Reddit/
+
 	
 ##Services required##
 As of version 0.9, SR requires the use of the these 3rd party services. This means that a valid account and developer oauth tokens are needed for each of the following services (ie. you must register an app of your own and use the tokens they give you):
