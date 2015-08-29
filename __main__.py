@@ -327,7 +327,9 @@ def main():
                 url = i.url
 
                 # readability api section
-                parse = ParserClient(credentials['readability']['parser_key'])
+                os.environ["READABILITY_PARSER_TOKEN"] = credentials['readability'][
+                    'parser_key']  # set the environment variable as the parser key
+                parse = ParserClient()  # readability api doesn't take the token directly
                 parse_response = parse.get_article(url)
                 article = parse_response.json()
                 if 'content' not in article:  # if unable to parse document, manually set an error message
