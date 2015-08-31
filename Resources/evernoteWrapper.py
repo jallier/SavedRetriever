@@ -1,4 +1,5 @@
 import datetime
+import logging
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
 import evernote.edam.error
@@ -82,9 +83,11 @@ class Client:
         :param notebook_name: name of notebook to add the new notes to.
         :type notebook_name: string
         """
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Initializing Evernote client")
         client = None
         try:  # Should make sandbox a debug option
-            client = EvernoteClient(token=token, sandbox=False)
+            client = EvernoteClient(token=token, sandbox=True)
         except evernote.edam.error.ttypes.EDAMUserException:
             print("Please provide correct evernote credentials")
             if input("Abort (y/n): ") == 'y':  # Might be best to just silently try again or continue rather than ask.

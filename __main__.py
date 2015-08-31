@@ -1,3 +1,4 @@
+import logging
 import warnings
 import json
 import urllib.request
@@ -113,13 +114,23 @@ def first_run():
     raise SystemExit
 
 
+def create_logger(log_to_console=False):
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    log_formatter = logging.Formatter("%(asctime)s: [%(name)s]: [%(levelname)s]: %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
+
+    file_handler = logging.FileHandler('SR.log')
+    file_handler.setFormatter(log_formatter)
+    logger.addHandler(file_handler)
+
+    if log_to_console is True:
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(log_formatter)
+        logger.addHandler(console_handler)
+    return logger
+
+
 def main():
-    if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
-        first_run()  # Authenticate and generate the credentials file.
-
-    with open('credentials.config', 'r') as json_file:
-        credentials = json.load(json_file)  # get various OAuth tokens
-
     # command line switches function
     args = read_command_args()
     use_evernote = args.e
@@ -128,9 +139,20 @@ def main():
     path = args.p
 
     if debug_mode:
-        print("Warning - Debug mode active. Files will be downloaded, but not added to index")
+        # print("Warning - Debug mode active. Files will be downloaded, but not added to index")
+        logger = create_logger(log_to_console=True)
+        logger.info('Warning - Debug mode active. Files will be downloaded, but not added to index')
     else:
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
+        logger = create_logger()
+
+    if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
+        first_run()  # Authenticate and generate the credentials file.
+
+    with open('credentials.config', 'r') as json_file:
+        credentials = json.load(json_file)  # get various OAuth tokens
+
+    logger.info('Starting SR')
 
     # Create the downloads folder on the specified path, or in the dir where file is stored.
     if path is not "":
@@ -143,6 +165,7 @@ def main():
         os.makedirs(path)
 
     # Authenticate with Reddit
+    logger.info('Authenticating with Reddit')
     client_id = credentials['reddit']['client_id']
     client_secret = credentials['reddit']['client_secret']
     redirect_uri = credentials['reddit']['redirect_uri']
@@ -166,14 +189,18 @@ def main():
         index = []
 
     if use_evernote is True:
+        # logger.info('Initialising Evernote client')
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
 
+    html_index_file = None
     if delete_files is False:  # only create index if we're going to use it.
         html_index_file = html_index.index(r.get_me().name, path)
 
     ind = open('index.txt', 'a')  # open index file for appending
+    logger.info("Beginning to save files...")
     for i in r.get_me().get_saved(limit=None):
         if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
+            logger.debug('Refreshing Reddit token')
             r.refresh_access_information(access_information['refresh_token'])
             time_since_accesstoken = time.time()
 
@@ -181,6 +208,8 @@ def main():
         file_name = name  # to stop ide complaining.
         note = None
         evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
+
+        # logger.info('Saving post - {}'.format(name))
 
         if name not in index:  # file has not been downloaded
             permalink = i.permalink
@@ -190,6 +219,7 @@ def main():
             # IS COMMENT #
             # ========== #
             if hasattr(i, 'body_html'):
+                logger.debug("Item is comment")
                 body = i.body_html
 
                 # html output
@@ -207,6 +237,7 @@ def main():
             # IS SELF-POST #
             # ============ #
             elif hasattr(i, 'is_self') and i.is_self is True:
+                logger.debug('Item is self-post')
                 text = i.selftext_html
 
                 # html output
@@ -228,6 +259,7 @@ def main():
                 Need to check file types and test pdf. How does this handle gfycat and webm? Can EN display that inline?
                 The regex in the if is to strip out non-valid filetype chars.
                 """
+                logger.debug('Item is direct linked image')
                 url = i.url
                 base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
                     -1]))  # filename for image. regex same as above.
@@ -235,6 +267,7 @@ def main():
 
                 # image downloader section
                 image_downloaded = image_saver(url, filename)
+                logger.info('Downloaded image - {}'.format(base_filename))
                 if image_downloaded:
                     # write image as <img> or link to local pdf downloaded in html file
                     if filename.split('.')[-1] == 'pdf':
@@ -262,6 +295,7 @@ def main():
             # IS IMGUR ALBUM #
             # ============== #
             elif hasattr(i, 'url') and 'imgur' in i.url:  # Add option to download images to folder.
+                logger.debug('Item is Imgur album')
                 url = i.url
                 body = "<h2>{}</h2>".format(title)
 
@@ -300,6 +334,9 @@ def main():
                     filename = img_path + "/" + base_filename
                     if not os.path.exists(filename):  # only download if file doesn't already exist
                         image_saver(image_link, filename)
+                        logger.info('Image downloaded - {}'.format(base_filename))
+                    else:
+                        logger.info('Image already exists - {}'.format(base_filename))
                     body += img
 
                 # Evernote api section
@@ -324,11 +361,13 @@ def main():
             # ========== #
             elif hasattr(i, 'title') and i.is_self is False:
                 # This section needs work. It is semi-complete. Ultimately, adding in the full article is the goal.
+                logger.debug('Item is article/webpage')
                 url = i.url
 
                 # readability api section
                 os.environ["READABILITY_PARSER_TOKEN"] = credentials['readability'][
                     'parser_key']  # set the environment variable as the parser key
+                logger.info('Initializing Readability Client')
                 parse = ParserClient()  # readability api doesn't take the token directly
                 parse_response = parse.get_article(url)
                 article = parse_response.json()
@@ -357,12 +396,15 @@ def main():
             failed_upload = False
             if use_evernote is True:
                 if note is not None:
-                    print("Saved {:9} - GUID: {}".format(name, note.guid))
+                    # print("Saved {:9} - GUID: {}".format(name, note.guid))
+                    logger.info('Saved {:9} - GUID: {}'.format(name, note.guid))
                 else:  # Upload failed
-                    print("Saved {:9} - Note failed to upload".format(name))
+                    # print("Saved {:9} - Note failed to upload".format(name))
+                    logger.info('Saved {:9} - Note failed to upload'.format(name))
                     failed_upload = True
             elif use_evernote is False:
-                print("Saved " + name)
+                # print("Saved " + name)
+                logger.info('Saved ' + name)
             if not debug_mode and not failed_upload:
                 ind.write(name + "\n")
                 ind.flush()  # this fixes python not writing the file if it terminates before .close() can be called

@@ -1,10 +1,9 @@
 .idea/
 *.pyc
-Downloads/
 index.txt
 *.config
 *.jpg
 *.html
 test.py
-SavedRetriever.egg-info/
-dist/
+SRDownloads/
+src/
