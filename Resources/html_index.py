@@ -1,3 +1,4 @@
+import logging
 import os
 
 
@@ -14,8 +15,10 @@ class index:
         :return:
         :rtype:
         """
+        logger = logging.getLogger(__name__)
         path += '/_index.html'
         if not os.path.isfile(path):
+            logger.debug('Creating new index file')
             self.file = open(path, 'a')  # create index for writing.
             self.file.write(
                 "<head><style>\n"
@@ -27,6 +30,7 @@ class index:
             )  # This is not completely valid html, as the <ul> tag will not be closed; most web browsers should
             #    ignore this and render the page properly.
         else:
+            logger.debug('Opening existing index file')
             self.file = open(path, 'a')  # otherwise open for appending without initial html
 
     def add_link(self, title, local_url, remote_url):

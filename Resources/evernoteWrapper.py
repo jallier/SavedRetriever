@@ -212,13 +212,14 @@ class Client:
         self.note.content += '</en-note>'  # enml closing tag
         created_note = None
         try:
+            self.logger.info('Uploading note: {}...'.format(self.note.title[:25]))
             created_note = self.note_store.createNote(self.note)  # this may result in errors if malformed xml
         except evernote.edam.error.ttypes.EDAMUserException as error:
             if error.errorCode == 7:
                 self.quota_remaining(upload_failed=True)
                 # add option to continue downloading locally, or just wait until the next month.
             else:
-                print(self.note)
+                self.logger.error(self.note)
                 raise
         self.note = None  # resets note. This is because im unsure how python handles objects in a for loop
         return created_note
