@@ -39,21 +39,54 @@ def html_writer(path, file, output):
 
     f = codecs.open(file_name, 'w', 'utf-8')
     # CSS styling for images. Does not affect text
-    html_image_size = "<head>\n<style>\nimg {max-width:100%;}\n</style>\n</head>\n"
-    f.write(html_image_size + output)
+    # html_image_size = "<head>\n<style>\nimg {max-width:100%;}\n</style>\n</head>\n"
+    # f.write(html_image_size + output)
+    f.write(output)
     f.close()
     return name
 
 
-def html_output_string(permalink, author, body):
+def html_output_string_image(permalink, author, body, title):
     """
     defines a global string to use to neaten up the output sections
     Returns a string of the html output for the items.
     """
-    return '<a href="{0}">{0}</a><br/>by <a href="http://www.reddit.com/u/{1}">/u/{1}</a><br/><br/>{2}'.format(
-        permalink,
-        author,
-        body)
+    # '<a href="{0}">{0}</a><br/>by <a href="http://www.reddit.com/u/{1}">/u/{1}</a><br/><br/>{2}'.format(
+    # permalink,
+    # author,
+    # body)
+
+    output = '<head><style>\n' \
+             'img {{max-width:100%;}}\n' \
+             'html {{font-family:georgia;}}\n' \
+             'h3 {{font-family:tahoma;}}\n' \
+             '.main {{max-width:750px; margin-left:auto; margin-right:auto;}}\n' \
+             '.right {{float:right;}}\n' \
+             '</style>\n' \
+             '<title>{title}</title></head>\n' \
+             '<div><a href="{permalink}">Permalink</a>' \
+             '<div style="display:inline;"> submitted by <a href="http://www.reddit.com/u/{author}">{author}</a>' \
+             '</div>\n' \
+             '<h3>{title}</h3><hr>\n' \
+             '{body}'
+    return output.format(permalink=permalink, author=author, title=title, body=body)
+
+
+def html_output_string(permalink, author, body, title):
+    output = '<head><style>\n' \
+             'img {{max-width:100%;}}\n' \
+             'html {{font-family:georgia;}}\n' \
+             'h3 {{font-family:tahoma;}}\n' \
+             '.main {{max-width:750px; margin-left:auto; margin-right:auto;}}\n' \
+             '.right {{float:right;}}\n' \
+             '</style>\n' \
+             '<title>{title}</title></head>\n' \
+             '<div class="main"><a href="{permalink}">Permalink</a>' \
+             '<div style="display:inline;" class="right">submitted by <a href="http://www.reddit.com/u/{author}">{author}</a>' \
+             '</div>\n' \
+             '<h3>{title}</h3><hr>\n' \
+             '{body}'
+    return output.format(permalink=permalink, author=author, title=title, body=body)
 
 
 def image_saver(url, filename):
@@ -160,7 +193,6 @@ def main():
     with open('credentials.config', 'r') as json_file:
         credentials = json.load(json_file)  # get various OAuth tokens
 
-    logger.info('Starting SR')
 
     # Create the downloads folder on the specified path, or in the dir where file is stored.
     if path is not "":
@@ -230,7 +262,7 @@ def main():
                 body = i.body_html
 
                 # html output
-                output = html_output_string(permalink, author, body)
+                output = html_output_string(permalink, author, body, title)
                 if delete_files is False:
                     file_name = html_writer(path, name, output)
 
@@ -248,7 +280,7 @@ def main():
                 text = i.selftext_html
 
                 # html output
-                output = html_output_string(permalink, author, text)
+                output = html_output_string(permalink, author, text, title)
                 if delete_files is False:
                     file_name = html_writer(path, name, output)
 
@@ -280,8 +312,7 @@ def main():
                     if filename.split('.')[-1] == 'pdf':
                         img = '<a href="{}">Click here for link to downloaded pdf</a>'.format(base_filename)
                     else:
-                        img = '{0}<br><br><a href="{1}"><img src="{1}"></a>'.format(i.title,
-                                                                                    base_filename)  # html for embedding in html file
+                        img = '<br><a href="{}"><img src="{}"></a>'.format(base_filename)  # html for embedding in html file
                 else:
                     img = "Image failed to download - It may be temporarily or permanently unavailable"
 
@@ -289,13 +320,13 @@ def main():
                 if use_evernote is True:
                     enclient.new_note(title)
                     enclient.add_tag(*evernote_tags)
-                    enclient.add_text(html_output_string(permalink, author, ""))  # should add body="" in the function
+                    enclient.add_text(html_output_string_image(permalink, author, "", title))  # should add body="" in the function
                     if image_downloaded:
                         enclient.add_resource(filename)
                     note = enclient.create_note()
 
                 if delete_files is False:
-                    file_name = html_writer(path, name, html_output_string(permalink, author, img))
+                    file_name = html_writer(path, name, html_output_string_image(permalink, author, img, title))
                 else:
                     os.remove(filename)
             # ============== #
@@ -351,16 +382,16 @@ def main():
                     enclient.new_note(title)
                     enclient.add_tag(*evernote_tags)
                     if len(gallery) == 1 and filename is not None:
-                        enclient.add_html(html_output_string(permalink, author, ""))
+                        enclient.add_html(html_output_string_image(permalink, author, "", title))
                         enclient.add_resource(filename)
                     else:
-                        enclient.add_text(html_output_string(permalink, author,
-                                                             'This album is too large to embed; please see '
-                                                             '<a href="{}">here</a> for the original link.'.format(url)))
+                        enclient.add_text(html_output_string_image(permalink, author,
+                        'This album is too large to embed; please see <a href="{}">here</a> for the original link.'.format(url),
+                                                             title))
                     note = enclient.create_note()
 
                 if delete_files is False:
-                    file_name = html_writer(path, name, html_output_string(permalink, author, body))
+                    file_name = html_writer(path, name, html_output_string_image(permalink, author, body, title))
                 else:
                     shutil.rmtree(img_path)
             # ========== #
@@ -384,7 +415,7 @@ def main():
                 article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
 
                 # html output section.
-                output = html_output_string(permalink, author, article)
+                output = html_output_string(permalink, author, article, title)
                 if delete_files is False:
                     file_name = html_writer(path, name, output)
 
@@ -392,7 +423,7 @@ def main():
                 if use_evernote is True:
                     enclient.new_note(title)
                     enclient.add_tag(*evernote_tags)
-                    output = html_output_string(permalink, author, article)
+                    output = html_output_string(permalink, author, article, title)
                     enclient.add_html(output)
 
                     # Add html file to note
