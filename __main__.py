@@ -86,6 +86,7 @@ def read_command_args():
     parser.add_argument('-e', '-evernote', action='store_true', default=False)  # use evernote
     parser.add_argument('-t', action='store_true', default=False)  # Temp mode. Delete html files after uploaded to evernote
     parser.add_argument('-p', '-path', nargs=1, default='')
+    parser.add_argument('-i', action='store_true', default=False)  # Info mode. Will print out log to console.
     # add in an option for notebook name
     # add in an option for saving to index (independant from debugging)
     args = parser.parse_args()
@@ -137,14 +138,21 @@ def main():
     debug_mode = args.debug
     delete_files = args.t if use_evernote is True else False
     path = args.p
+    info_mode = args.i
 
     if debug_mode:
         # print("Warning - Debug mode active. Files will be downloaded, but not added to index")
         logger = create_logger(log_to_console=True)
+        logger.setLevel(logging.DEBUG)
         logger.info('Warning - Debug mode active. Files will be downloaded, but not added to index')
+    elif info_mode:
+        warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
+        logger = create_logger(log_to_console=True)
     else:
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
         logger = create_logger()
+
+    logger.info("\n###########\nStarting SR\n###########")
 
     if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
         first_run()  # Authenticate and generate the credentials file.
@@ -189,7 +197,6 @@ def main():
         index = []
 
     if use_evernote is True:
-        # logger.info('Initialising Evernote client')
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
 
     html_index_file = None

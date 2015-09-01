@@ -43,9 +43,10 @@ Readability is required to parse articles into more readable text, and imgur is 
 The following commandline switches are available:
 
 - -e, -evernote: when present, SR will attempt to upload saved items to evernote.
-- -debug: when present, items will not be added to the index, to allow for easier testing
+- -debug: when present, items will not be added to the index or the html index file, to allow for easier testing. Debug level log will also be collected
 - -p, -path: Specifies where you would like the save the files. If not specified, will download to current directory. eg -p /home/hallj/Documents/
 - -t: When present, SR will delete any files it downloads once it has uploaded them to evernote. (Partially implemented) Only available when using evernote
+- -i: When present, SR will print the log to the console as well as the log file at info level.
 
 ##3rd Party libraries##
 SR uses the following 3rd party libraries:
