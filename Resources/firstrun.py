@@ -1,8 +1,10 @@
 import sys
 import praw
+import logging
 
 
 def authenticate_reddit():
+	logger = logging.getLogger(__name__)
     print(
         "Please ensure that you have the relevant tokens for the services required and fill these in after "
         "authenticating with reddit. See the readme for where to get them")
@@ -12,7 +14,8 @@ def authenticate_reddit():
     redirect_uri = input("Redirect URI (press enter for http://127.0.0.1:65010/authorize_callback): ")
     redirect_uri = 'http://127.0.0.1:65010/authorize_callback' if redirect_uri == '' else redirect_uri
     scope = 'identity history read'
-
+	
+	logger.info("Authenticating with Reddit")
     r = praw.Reddit('easy-oauth.py client',
                     oauth_client_id=client_id,
                     oauth_client_secret=client_secret,
@@ -21,8 +24,10 @@ def authenticate_reddit():
 
     print("Visit the following link, and click allow:\n" + r.get_authorize_url('SavedRetriever by /u/fuzzycut', scope,
                                                                                True))
+    logger.info("Generating OAuth token...")
     access_code = input('Copy code from url in browser, then enter code: ')
     access_information = r.get_access_information(access_code)
+    logger.info("Token generated")
     return {'client_id': client_id, 'client_secret': client_secret, 'redirect_uri': redirect_uri,
             'refresh_token': access_information['refresh_token']}
 
