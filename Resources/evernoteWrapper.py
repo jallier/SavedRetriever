@@ -14,6 +14,7 @@ from Resources.CommonUtils import Utils
 def html_to_enml(html_content):
     """
     Helper function for add_html method. Shouldn't need to be called by itself.
+    Strips out all the non-enml valid html so evernote can use it.
     :param html_content: html content to add
     :type html_content: string
     :rtype: string
@@ -50,8 +51,10 @@ def html_to_enml(html_content):
     allowed_attrs = {
         '*': ['href', 'src']
     }
-    output_text = bleach.clean(html_content, tags=allowed_tags, attributes=allowed_attrs,
-                               strip=True)  # removes disallowed elements from document for evernote
+    output_text = re.sub("(<head>[\s\S]*?</head>)", '', html_content)  # Strip out the head from the input
+
+    output_text = bleach.clean(output_text, tags=allowed_tags, attributes=allowed_attrs,
+                               strip=True)  # removes all other disallowed elements from document for evernote
 
     output_text = re.sub("<br>|</br>", "<br/>", output_text)  # fixes br tag for evernote
 
@@ -68,7 +71,7 @@ def html_to_enml(html_content):
         if match[1][0:3] == '/r/':
             output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}"'.format(match[1][3:]), output_text)
 
-    soup = BeautifulSoup(output_text, "html.parser")
+    soup = BeautifulSoup(output_text, "html.parser")  # fixes unclosed html tags for evernote
     output_text = str(soup)
 
     return output_text
