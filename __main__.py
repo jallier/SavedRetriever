@@ -222,11 +222,13 @@ def main():
     time_since_accesstoken = time.time()
 
     if os.path.isfile('index.txt'):  # checking for  index file, which contains index of downloaded files.
+        index = set()
         with open('index.txt', 'r') as ind:
-            index = ind.read()
-        index = index.split()
+            # index = ind.read()
+            for line in ind:
+                index.add(line[:-1])
     else:
-        index = []
+        index = set()
 
     if use_evernote is True:
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
