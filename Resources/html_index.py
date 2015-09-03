@@ -48,6 +48,7 @@ class index:
         self.file.write(
             '    <li><a href="{}">{}</a> | <a href="{}">Original</a></li>\n'.format(local_url, title, remote_url)
         )  # write the link and title to a list. New line is for formatting of file itself.
+        self.file.flush()
 
     def save_and_close(self):
         """

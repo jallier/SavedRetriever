@@ -234,13 +234,17 @@ def main():
     refresh_token = credentials['reddit']['refresh_token']
     user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
 
-    r = praw.Reddit(user_agent=user_agent,
-                    oauth_client_id=client_id,
-                    oauth_client_secret=client_secret,
-                    oauth_redirect_uri=redirect_uri)
+    try:
+        r = praw.Reddit(user_agent=user_agent,
+                        oauth_client_id=client_id,
+                        oauth_client_secret=client_secret,
+                        oauth_redirect_uri=redirect_uri)
 
-    access_information = r.refresh_access_information(refresh_token)
-    r.set_access_credentials(**access_information)
+        access_information = r.refresh_access_information(refresh_token)
+        r.set_access_credentials(**access_information)
+    except Exception as e:
+        logger.error(e)
+        raise SystemExit
     time_since_accesstoken = time.time()
 
     if os.path.isfile('index.txt'):  # checking for  index file, which contains index of downloaded files.
