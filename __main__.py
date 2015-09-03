@@ -11,6 +11,8 @@ import shutil
 import praw
 import imgurpython.helpers.error
 import time
+from time import strftime
+from logging.handlers import RotatingFileHandler
 from readability import ParserClient
 from imgurpython import ImgurClient
 from Resources import evernoteWrapper
@@ -68,8 +70,9 @@ def html_output_string_image(permalink, author, body, title):
              '<div style="display:inline;"> submitted by <a href="http://www.reddit.com/u/{author}">{author}</a>' \
              '</div>\n' \
              '<h3>{title}</h3><hr>\n' \
-             '{body}'
-    return output.format(permalink=permalink, author=author, title=title, body=body)
+             '{body}\n' \
+             '<div style="text-align:center;"><br>Downloaded at {date}</div></div>'
+    return output.format(permalink=permalink, author=author, title=title, body=body, date=strftime("%I:%M:%S on %a %d %b %Y"))
 
 
 def html_output_string(permalink, author, body, title):
@@ -85,8 +88,9 @@ def html_output_string(permalink, author, body, title):
              '<div style="display:inline;" class="right">submitted by <a href="http://www.reddit.com/u/{author}">{author}</a>' \
              '</div>\n' \
              '<h3>{title}</h3><hr>\n' \
-             '{body}'
-    return output.format(permalink=permalink, author=author, title=title, body=body)
+             '{body}\n' \
+             '<div style="text-align:center;"><br>Downloaded at {date}</div></div>'
+    return output.format(permalink=permalink, author=author, title=title, body=body, date=strftime("%I:%M:%S on %a %d %b %Y"))
 
 
 def image_saver(url, filename):
@@ -149,11 +153,17 @@ def first_run():
 
 
 def create_logger(log_to_console=False):
+    """
+    Creates a logger object to log output to file and optionally console
+    :param log_to_console: Whether to log output to the console
+    :return: logger object
+    """
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     log_formatter = logging.Formatter("%(asctime)s: [%(name)s]: [%(levelname)s]: %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
 
-    file_handler = logging.FileHandler('SR.log')
+    # file_handler = logging.FileHandler('SR.log')
+    file_handler = logging.handlers.RotatingFileHandler('SR.log', backupCount=5, maxBytes=5242880)  # creates new log at 5 MB
     file_handler.setFormatter(log_formatter)
     logger.addHandler(file_handler)
 
@@ -162,6 +172,23 @@ def create_logger(log_to_console=False):
         console_handler.setFormatter(log_formatter)
         logger.addHandler(console_handler)
     return logger
+
+
+def subreddit_linker(input_text):
+    """
+    Fixes non-valid links to subreddits in text
+    :param input_text: html string to fix
+    :type input_text: str
+    :return: fixed html str
+    :rtype: str
+    """
+    pattern = 'href="/r/.*?"'
+    matches = re.finditer(pattern, input_text)
+    for i in matches:
+        full_match = i.group()
+        match = full_match.split('/')
+        input_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}'.format(match[-1]), input_text)
+    return input_text
 
 
 def main():
@@ -193,7 +220,6 @@ def main():
     with open('credentials.config', 'r') as json_file:
         credentials = json.load(json_file)  # get various OAuth tokens
 
-
     # Create the downloads folder on the specified path, or in the dir where file is stored.
     if path is not "":
         path = path[0]
@@ -224,7 +250,6 @@ def main():
     if os.path.isfile('index.txt'):  # checking for  index file, which contains index of downloaded files.
         index = set()
         with open('index.txt', 'r') as ind:
-            # index = ind.read()
             for line in ind:
                 index.add(line[:-1])
     else:
@@ -264,6 +289,7 @@ def main():
                 body = i.body_html
 
                 # html output
+                body = subreddit_linker(body)
                 output = html_output_string(permalink, author, body, title)
                 if delete_files is False:
                     file_name = html_writer(path, name, output)
@@ -282,6 +308,7 @@ def main():
                 text = i.selftext_html
 
                 # html output
+                text = subreddit_linker(text)
                 output = html_output_string(permalink, author, text, title)
                 if delete_files is False:
                     file_name = html_writer(path, name, output)
@@ -314,7 +341,8 @@ def main():
                     if filename.split('.')[-1] == 'pdf':
                         img = '<a href="{}">Click here for link to downloaded pdf</a>'.format(base_filename)
                     else:
-                        img = '<br><a href="{}"><img src="{}"></a>'.format(base_filename)  # html for embedding in html file
+                        img = '<br><a href="{0}"><img src="{0}"></a>'.format(
+                            base_filename)  # html for embedding in html file
                 else:
                     img = "Image failed to download - It may be temporarily or permanently unavailable"
 

@@ -63,13 +63,12 @@ def html_to_enml(html_content):
 
     output_text = re.sub('(<a href="[^htp].*?</a>)', '-removed-', output_text)  # Removes invalid <a> tags
 
-    pattern = 'href=".*?"'  # wow this is ugly. Fixes subreddit linking
+    pattern = 'href="/r/.*?"'  # wow this is ugly. Fixes subreddit linking
     matches = re.finditer(pattern, output_text)
     for i in matches:
         full_match = i.group()
-        match = full_match.split('"')
-        if match[1][0:3] == '/r/':
-            output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}"'.format(match[1][3:]), output_text)
+        match = full_match.split('/')
+        output_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}'.format(match[-1]), output_text)
 
     soup = BeautifulSoup(output_text, "html.parser")  # fixes unclosed html tags for evernote
     output_text = str(soup)
@@ -82,9 +81,9 @@ class Client:
         """
         Initializes the evernote client for uploading notes.
         :param token: the developer token needed for access to the account
-        :type token: string
+        :type token: str
         :param notebook_name: name of notebook to add the new notes to.
-        :type notebook_name: string
+        :type notebook_name: str
         """
         self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing Evernote client")
@@ -237,7 +236,7 @@ class Client:
         This method is NOT comprehensive. It will only strip classes from tags, close <br> tags and <img> tags
         More conversions will be added as needed.
         :param input_html: string of the html to add to the note.
-        :type input_html: string
+        :type input_html: str
         :return:
         """
         if sanitize is True:
