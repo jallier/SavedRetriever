@@ -14,13 +14,13 @@ This means that you will need an account for each of the required services, and 
 Once the folder is downloaded:
 
  1. First ensure that you have created a new personal script at [reddit](https://www.reddit.com/prefs/apps/), [imgur](https://imgur.com/signin?redirect=http://api.imgur.com/oauth2/addclient) and [readability](https://www.readability.com/login/?next=/settings/account)
- 2. Navigate to the directory and run:
+ 2. Download folder and extract the zip, or clone, then navigate to the directory and run:
 
 	 `pip install -r requirements.txt`
 
- 3. Then navigate to the download location and run
+ 3. Then navigate up one level to the download location and run the name of the folder, eg:
 	 
-	 `python SavedRetriever`
+	 `python SavedRetriever-master`
 
  4. This will interactively authenticate with reddit and generate the config file. From there, edit the config so that the relevant access tokens are filled in. See the list of services below for where to get them.
  5. The script can then be run normally and will use the provided tokens. eg
