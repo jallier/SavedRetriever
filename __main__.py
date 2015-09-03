@@ -39,13 +39,9 @@ def html_writer(path, file, output):
     name = file + ".html"
     file_name = "{}/{}".format(path, name)
 
-    f = codecs.open(file_name, 'w', 'utf-8')
-    # CSS styling for images. Does not affect text
-    # html_image_size = "<head>\n<style>\nimg {max-width:100%;}\n</style>\n</head>\n"
-    # f.write(html_image_size + output)
-    f.write(output)
-    f.close()
-    return name
+    with open(file_name, 'w', encoding='utf-8') as f:
+        f.write('\uFEFF'+output)  # The \u char is the unicode character that indicates the file is encoded in utf-8
+    return name                   # This stops chrome from rendering weird symbols.
 
 
 def html_output_string_image(permalink, author, body, title):
@@ -285,7 +281,7 @@ def main():
             # IS COMMENT #
             # ========== #
             if hasattr(i, 'body_html'):
-                logger.debug("Item is comment")
+                logger.debug("{} is comment".format(name))
                 body = i.body_html
 
                 # html output
@@ -304,7 +300,7 @@ def main():
             # IS SELF-POST #
             # ============ #
             elif hasattr(i, 'is_self') and i.is_self is True:
-                logger.debug('Item is self-post')
+                logger.debug('{} is self-post'.format(name))
                 text = i.selftext_html
 
                 # html output
@@ -327,15 +323,20 @@ def main():
                 Need to check file types and test pdf. How does this handle gfycat and webm? Can EN display that inline?
                 The regex in the if is to strip out non-valid filetype chars.
                 """
-                logger.debug('Item is direct linked image')
+                logger.debug('{} is direct linked image'.format(name))
                 url = i.url
                 base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
                     -1]))  # filename for image. regex same as above.
                 filename = path + "/" + base_filename
 
                 # image downloader section
-                image_downloaded = image_saver(url, filename)
-                logger.info('Downloaded image - {}'.format(base_filename))
+                if os.path.exists(filename) and (os.path.getsize(filename) > 0):  # If image exists and is valid
+                    image_downloaded = True
+                    logger.info("Image already exists - {}".format(base_filename))
+                else:
+                    image_downloaded = image_saver(url, filename)
+                    logger.info('Downloaded image - {}'.format(base_filename))
+
                 if image_downloaded:
                     # write image as <img> or link to local pdf downloaded in html file
                     if filename.split('.')[-1] == 'pdf':
@@ -363,7 +364,7 @@ def main():
             # IS IMGUR ALBUM #
             # ============== #
             elif hasattr(i, 'url') and 'imgur' in i.url:  # Add option to download images to folder.
-                logger.debug('Item is Imgur album')
+                logger.debug('{} is Imgur album'.format(name))
                 url = i.url
                 body = "<h2>{}</h2>".format(title)
 
@@ -400,11 +401,11 @@ def main():
                                                                                                         base_filename,
                                                                                                         image_description)
                     filename = img_path + "/" + base_filename
-                    if not os.path.exists(filename):  # only download if file doesn't already exist
+                    if os.path.exists(filename) and (os.path.getsize(filename) > 0):  # only download if file doesn't already exist
+                        logger.info('Image already exists - {}'.format(base_filename))
+                    else:
                         image_saver(image_link, filename)
                         logger.info('Image downloaded - {}'.format(base_filename))
-                    else:
-                        logger.info('Image already exists - {}'.format(base_filename))
                     body += img
 
                 # Evernote api section
@@ -429,7 +430,7 @@ def main():
             # ========== #
             elif hasattr(i, 'title') and i.is_self is False:
                 # This section needs work. It is semi-complete. Ultimately, adding in the full article is the goal.
-                logger.debug('Item is article/webpage')
+                logger.debug('{} is article/webpage'.format(name))
                 url = i.url
 
                 # readability api section

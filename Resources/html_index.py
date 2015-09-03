@@ -22,7 +22,7 @@ class index:
             self.file = open(path, 'a')  # create index for writing.
             self.file.write(
                 "<head><style>\n"
-                "img {{max-width:100%;}}body {{font-family: Calibri;}}\n"
+                "img {{max-width:100%;}}body {{font-family: Georgia;}}\n"
                 "</style></head>\n"
                 "<title>saved by {0}</title>\n"
                 "<h3>Index of files saved by <a href=\"http://www.reddit.com/user/{0}\">/u/{0}</a></h3>\n"
