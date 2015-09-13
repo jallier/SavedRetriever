@@ -56,8 +56,8 @@ def html_output_string_image(permalink, author, body, title):
 
     output = '<head><style>\n' \
              'img {{max-width:100%;}}\n' \
-             'html {{font-family:georgia;}}\n' \
-             'h3 {{font-family:tahoma;}}\n' \
+             'html {{font-family:"Roboto", "Georgia", sans-serif;}}\n' \
+             'h3 {{font-family:"Roboto", "Tahoma", sans-serif;}}\n' \
              '.main {{max-width:750px; margin-left:auto; margin-right:auto;}}\n' \
              '.right {{float:right;}}\n' \
              '</style>\n' \
@@ -73,17 +73,22 @@ def html_output_string_image(permalink, author, body, title):
 
 def html_output_string(permalink, author, body, title):
     output = '<head><style>\n' \
+             'body {{margin: 0px;}}\n' \
              'img {{max-width:100%;}}\n' \
-             'html {{font-family:georgia;}}\n' \
-             'h3 {{font-family:tahoma;}}\n' \
+             'html {{font-family:"Roboto", "Georgia", sans-serif;}}\n' \
+             'h3 {{font-family:"Roboto", "Tahoma", sans-serif;}}\n' \
              '.main {{max-width:750px; margin-left:auto; margin-right:auto;}}\n' \
              '.right {{float:right;}}\n' \
+             '.navbar {{background-color: #3F51B5; padding-top: 5px; padding-bottom: 5px; margin-bottom: 10px; color: white;}}.navbar a:link' \
+             ' {{color: #ffffff;}}.navbar a:visited {{color: #ffffff;}}.navbar a:hover {{color: #B6B6B6;}}' \
              '</style>\n' \
+             '<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">\n' \
              '<title>{title}</title></head>\n' \
-             '<div class="main"><a href="{permalink}">Permalink</a>' \
+             '<div class="navbar"><div class="main"><a href="{permalink}">Permalink</a>' \
              '<div style="display:inline;" class="right">submitted by <a href="http://www.reddit.com/u/{author}">{author}</a>' \
              '</div>\n' \
-             '<h3>{title}</h3><hr>\n' \
+             '<h3>{title}</h3></div></div>\n' \
+             '<div class="main"> \n' \
              '{body}\n' \
              '<div style="text-align:center;"><br>Downloaded at {date}</div></div>'
     return output.format(permalink=permalink, author=author, title=title, body=body, date=strftime("%I:%M:%S on %a %d %b %Y"))
