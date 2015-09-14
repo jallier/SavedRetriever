@@ -55,17 +55,21 @@ def html_output_string_image(permalink, author, body, title):
     # body)
 
     output = '<head><style>\n' \
-             'img {{max-width:100%;}}\n' \
-             'html {{font-family:"Roboto", "Georgia", sans-serif;}}\n' \
-             'h3 {{font-family:"Roboto", "Tahoma", sans-serif;}}\n' \
-             '.main {{max-width:750px; margin-left:auto; margin-right:auto;}}\n' \
-             '.right {{float:right;}}\n' \
-             '</style>\n' \
+             'body {{margin: 0px; padding-bottom: 5px;}}\n ' \
+             'img {{max-width:100%;}}\n ' \
+             'html {{font-family:"Roboto", "Georgia", sans-serif; font-weight: 400;}} ' \
+             'h3 {{font-family:"Roboto", "Tahoma", sans-serif; font-weight: 700;}} ' \
+             '.main {{max-width:750px; margin-left:auto; margin-right:auto;}} ' \
+             '.right {{float:right;}} ' \
+             '.navbar {{background-color: #3F51B5; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; ' \
+             'margin-bottom: 10px; color: white;}}.navbar a:link {{color: #ffffff;}}.navbar a:visited {{color: #ffffff;}}' \
+             '.navbar a:hover {{color: #B6B6B6;}}</style> ' \
+             '<link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet" type="text/css">' \
              '<title>{title}</title></head>\n' \
-             '<div><a href="{permalink}">Permalink</a>' \
+             '<div class="navbar"><a href="{permalink}">Permalink</a>' \
              '<div style="display:inline;"> submitted by <a href="http://www.reddit.com/u/{author}">{author}</a>' \
              '</div>\n' \
-             '<h3>{title}</h3><hr>\n' \
+             '<h3>{title}</h3></div>\n' \
              '{body}\n' \
              '<div style="text-align:center;"><br>Downloaded at {date}</div></div>'
     return output.format(permalink=permalink, author=author, title=title, body=body, date=strftime("%I:%M:%S on %a %d %b %Y"))
@@ -75,14 +79,14 @@ def html_output_string(permalink, author, body, title):
     output = '<head><style>\n' \
              'body {{margin: 0px;}}\n' \
              'img {{max-width:100%;}}\n' \
-             'html {{font-family:"Roboto", "Georgia", sans-serif;}}\n' \
-             'h3 {{font-family:"Roboto", "Tahoma", sans-serif;}}\n' \
+             'html {{font-family:"Roboto", "Georgia", sans-serif; font-weight:400;}}\n' \
+             'h3 {{font-family:"Roboto", "Tahoma", sans-serif; font-weight:700;}}\n' \
              '.main {{max-width:750px; margin-left:auto; margin-right:auto;}}\n' \
              '.right {{float:right;}}\n' \
              '.navbar {{background-color: #3F51B5; padding-top: 5px; padding-bottom: 5px; margin-bottom: 10px; color: white;}}.navbar a:link' \
              ' {{color: #ffffff;}}.navbar a:visited {{color: #ffffff;}}.navbar a:hover {{color: #B6B6B6;}}' \
              '</style>\n' \
-             '<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">\n' \
+             '<link href=\'https://fonts.googleapis.com/css?family=Roboto:400,700\' rel=\'stylesheet\' type=\'text/css\'>\n' \
              '<title>{title}</title></head>\n' \
              '<div class="navbar"><div class="main"><a href="{permalink}">Permalink</a>' \
              '<div style="display:inline;" class="right">submitted by <a href="http://www.reddit.com/u/{author}">{author}</a>' \

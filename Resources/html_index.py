@@ -22,10 +22,15 @@ class index:
             self.file = open(path, 'a')  # create index for writing.
             self.file.write(
                 "<head><style>\n"
-                "img {{max-width:100%;}}body {{font-family: Georgia;}}\n"
-                "</style></head>\n"
+                "body{{margin: 0;}} html {{font-family:'Roboto', 'Georgia', sans-serif; font-weight:400;}} "
+                "h3 {{font-family:'Roboto', 'Tahoma', sans-serif; font-weight:700;}} "
+                ".navbar {{background-color: #3F51B5; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; margin-bottom: 10px; color: white;}}"
+                ".navbar a:link {{color: #ffffff;}}.navbar a:visited {{color: #ffffff;}}.navbar a:hover {{color: #B6B6B6;}}\n"
+                "</style>\n"
                 "<title>saved by {0}</title>\n"
-                "<h3>Index of files saved by <a href=\"http://www.reddit.com/user/{0}\">/u/{0}</a></h3>\n"
+                "<link href='https://fonts.googleapis.com/css?family=Roboto:400,700' rel='stylesheet' type='text/css'>"
+                "</head>"
+                "<div class='navbar'><h3>Index of files saved by <a href=\"http://www.reddit.com/user/{0}\">/u/{0}</a></h3></div>\n"
                 "<ul>\n".format(username)
             )  # This is not completely valid html, as the <ul> tag will not be closed; most web browsers should
             #    ignore this and render the page properly.
