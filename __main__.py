@@ -4,7 +4,6 @@ import json
 import urllib.request
 import os
 import argparse
-import codecs
 import re
 import urllib.error
 import shutil
@@ -39,9 +38,13 @@ def html_writer(path, file, output):
     name = file + ".html"
     file_name = "{}/{}".format(path, name)
 
-    with open(file_name, 'w', encoding='utf-8') as f:
-        f.write('\uFEFF'+output)  # The \u char is the unicode character that indicates the file is encoded in utf-8
-    return name                   # This stops chrome from rendering weird symbols.
+    try:
+        with open(file_name, 'w', encoding='utf-8') as f:
+            f.write(
+                '\uFEFF' + output)  # The \u char is the unicode character that indicates the file is encoded in utf-8
+    except OSError:  # This stops chrome from rendering weird symbols.
+        print("File not opened")  # Change to a logger once this is converted to a class.
+    return name
 
 
 def html_output_string_image(permalink, author, body, title):
@@ -112,6 +115,8 @@ def image_saver(url, filename):
         with urllib.request.urlopen(url) as response, open(filename, "wb") as out_file:
             data = response.read()
             out_file.write(data)
+    except OSError:
+        print("Unable to save image")  # Convert to logger when class implemented.
     except urllib.error.HTTPError:
         return False
     return True
@@ -149,8 +154,11 @@ def first_run():
 
     dic = {'reddit': reddit, 'evernote': evernote_dic, 'imgur': imgur, 'readability': readability}
 
-    with open('credentials.config', 'w') as f:
-        f.write(json.dumps(dic, indent=2))
+    try:
+        with open('credentials.config', 'w') as f:
+            f.write(json.dumps(dic, indent=2))
+    except OSError:
+        print("Unable to open credentials file")
 
     print("\nAuthentication complete. To complete setup,"
           " fill in tokens for remaining services in credentials.config file")
@@ -197,6 +205,9 @@ def subreddit_linker(input_text):
 
 
 def main():
+    if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
+        first_run()  # Authenticate and generate the credentials file.
+
     # command line switches function
     args = read_command_args()
     use_evernote = args.e
@@ -219,11 +230,12 @@ def main():
 
     logger.info("\n###########\nStarting SR\n###########")
 
-    if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
-        first_run()  # Authenticate and generate the credentials file.
-
-    with open('credentials.config', 'r') as json_file:
-        credentials = json.load(json_file)  # get various OAuth tokens
+    try:
+        with open('credentials.config', 'r') as json_file:
+            credentials = json.load(json_file)  # get various OAuth tokens
+    except OSError:
+        logger.error('Unable to open credentials file')
+        raise SystemExit
 
     # Create the downloads folder on the specified path, or in the dir where file is stored.
     if path is not "":
@@ -256,13 +268,15 @@ def main():
         raise SystemExit
     time_since_accesstoken = time.time()
 
+    index = set()
     if os.path.isfile('index.txt'):  # checking for  index file, which contains index of downloaded files.
-        index = set()
-        with open('index.txt', 'r') as ind:
-            for line in ind:
-                index.add(line[:-1])
-    else:
-        index = set()
+        try:
+            with open('index.txt', 'r') as ind:
+                for line in ind:
+                    index.add(line[:-1])  # -1 truncates the newline in the index file.
+        except OSError:
+            logger.error("Unable to open index file for reading")
+            raise SystemExit
 
     if use_evernote is True:
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
@@ -271,7 +285,12 @@ def main():
     if delete_files is False:  # only create index if we're going to use it.
         html_index_file = html_index.index(r.get_me().name, path)
 
-    ind = open('index.txt', 'a')  # open index file for appending
+    try:
+        ind = open('index.txt', 'a')  # open index file for appending
+    except OSError:
+        logger.error("Unable to open index file for writing")
+        raise SystemExit
+
     logger.info("Beginning to save files...")
     for i in r.get_me().get_saved(limit=None):
         if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
@@ -501,7 +520,7 @@ def main():
         try:
             os.rmdir('Downloads')
         except OSError:
-            pass
+            logger.error("Unable to remove files")
 
 if __name__ == '__main__':
     with warnings.catch_warnings():  # This is to ignore ssl socket unclosed warnings.
