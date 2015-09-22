@@ -162,7 +162,7 @@ def first_run():
 
     print("\nAuthentication complete. To complete setup,"
           " fill in tokens for remaining services in credentials.config file")
-    raise SystemExit
+    raise SystemExit  # quit once complete
 
 
 def create_logger(log_to_console=False):

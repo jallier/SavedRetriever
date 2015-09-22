@@ -35,6 +35,5 @@ def authenticate_reddit():
 if __name__ == '__main__':
     try:
         authenticate_reddit()
-        sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
