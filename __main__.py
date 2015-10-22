@@ -383,7 +383,7 @@ def main():
                 if use_evernote is True:
                     enclient.new_note(title)
                     enclient.add_tag(*evernote_tags)
-                    enclient.add_text(html_output_string_image(permalink, author, "", title))  # should add body="" in the function
+                    enclient.add_html(html_output_string_image(permalink, author, "", title))  # should add body="" in the function
                     if image_downloaded:
                         enclient.add_resource(filename)
                     note = enclient.create_note()
@@ -448,7 +448,7 @@ def main():
                         enclient.add_html(html_output_string_image(permalink, author, "", title))
                         enclient.add_resource(filename)
                     else:
-                        enclient.add_text(html_output_string_image(permalink, author,
+                        enclient.add_html(html_output_string_image(permalink, author,
                         'This album is too large to embed; please see <a href="{}">here</a> for the original link.'.format(url),
                                                              title))
                     note = enclient.create_note()
