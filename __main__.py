@@ -333,7 +333,7 @@ def main():
             # ============ #
             elif hasattr(i, 'is_self') and i.is_self is True:
                 logger.debug('{} is self-post'.format(name))
-                text = i.selftext_html
+                text = i.selftext_html if i.selftext_html is not None else ""
 
                 # html output
                 text = subreddit_linker(text)
