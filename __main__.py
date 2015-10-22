@@ -514,6 +514,7 @@ def main():
 
     # end of for loop
     ind.close()
+    logger.info("All items downloaded")
     if delete_files is False:
         html_index_file.save_and_close()
     else:  # try remove downloads if -t is set, but don't force it if directory has things in it already.
