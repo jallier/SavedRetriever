@@ -155,8 +155,13 @@ class Client:
         # downloaded by the downloader. Will need more testing. Others can be added later.
         extention = filename.split('.')[-1]
         mime_type = accepted_mimes[extention]
-        with open(filename, 'rb') as f:
-            attachment = f.read()
+        try:
+            with open(filename, 'rb') as f:
+                attachment = f.read()
+        except OSError:
+            print("Unable to open file")
+            return
+
         # hashing the attachment
         md5 = hashlib.md5()
         md5.update(attachment)
