@@ -281,6 +281,12 @@ def main():
     if use_evernote is True:
         enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
 
+    # Initialize the readability client
+    os.environ["READABILITY_PARSER_TOKEN"] = credentials['readability'][
+        'parser_key']  # set the environment variable as the parser key
+    logger.info('Initializing Readability Client')
+    parse = ParserClient()  # readability api doesn't take the token directly
+
     html_index_file = None
     if delete_files is False:  # only create index if we're going to use it.
         html_index_file = html_index.index(r.get_me().name, path)
@@ -466,10 +472,6 @@ def main():
                 url = i.url
 
                 # readability api section
-                os.environ["READABILITY_PARSER_TOKEN"] = credentials['readability'][
-                    'parser_key']  # set the environment variable as the parser key
-                logger.info('Initializing Readability Client')
-                parse = ParserClient()  # readability api doesn't take the token directly
                 parse_response = parse.get_article(url)
                 article = parse_response.json()
                 if 'content' not in article:  # if unable to parse document, manually set an error message
