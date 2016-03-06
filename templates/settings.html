@@ -59,41 +59,96 @@
                 </a>
             </div>
             <div class="bs-component">
-                <div class="form-group label-floating is-empty">
-                    <label class="control-label" for="focusedInput1">Reddit OAuth Token</label>
-                    <input class="form-control" id="focuedInput1" type="text" data-cip-id="focusedInput1"/>
-                    <span class="material-input"></span>
-                </div>
-                <div class="form-group label-floating is-empty">
-                    <label class="control-label" for="focusedInput2">Imgur OAuth Token</label>
-                    <input class="form-control" id="focuedInput2" type="text" data-cip-id="focusedInput2"/>
-                    <span class="material-input"></span>
-                </div>
-                <div class="form-group label-floating is-empty">
-                    <label class="control-label" for="focusedInput3">Readability OAuth Token</label>
-                    <input class="form-control" id="focuedInput3" type="text" data-cip-id="focusedInput3"/>
-                    <span class="material-input"></span>
-                </div>
-                <div class="form-group label-floating is-empty">
-                    <label class="control-label" for="focusedInput4">Evernote OAuth Token - Leave blank if not using
-                        Evernote</label>
-                    <input class="form-control" id="focuedInput4" type="text" data-cip-id="focusedInput4"/>
-                    <span class="material-input"></span>
-                </div>
-                <div class="togglebutton">
-                    <label>
-                        <input type="checkbox" checked>
-                        Upload posts to Evernote
-                    </label>
-                </div>
-                <p/>
-                <div>
-                    <a href="javascript:void(0)" class="btn btn-raised btn-primary">
-                        Save
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group label-floating is-empty">
+                        <label class="control-label" for="focusedInput1">Reddit OAuth Token</label>
+                        <!--<input class="form-control" id="focusedInput1" type="text" data-cip-id="focusedInput1"/>-->
+                        {{ form.reddit_token(size=50, class_="form-control") }}
+                        <span class="material-input"></span>
+                    </div>
+                    <div class="form-group label-floating is-empty">
+                        <label class="control-label" for="focusedInput2">Imgur OAuth Token</label>
+                        {{ form.imgur_token(size=50, class_="form-control") }}
+                        <span class="material-input"></span>
+                    </div>
+                    <div class="form-group label-floating is-empty">
+                        <label class="control-label" for="focusedInput3">Readability OAuth Token</label>
+                        {{ form.readability_token(size=50, class_="form-control") }}
+                        <span class="material-input"></span>
+                    </div>
+                    <div class="form-group label-floating is-empty">
+                        <label class="control-label" for="focusedInput4">Evernote OAuth Token - Leave blank if not using
+                            Evernote</label>
+                        {{ form.evernote_token(size=50, class_="form-control") }}
+                        <span class="material-input"></span>
+                    </div>
+                    <div class="togglebutton">
+                        <label>
+                            <!--<input type="checkbox" checked>-->
+                            {{ form.upload_to_evernote }}
+                            Upload posts to Evernote
+                        </label>
+                    </div>
+                    <p/>
+                    <div>
+                        <input type="submit" class="btn btn-raised btn-primary" value="SAVE">
                         <div class="ripple-container"></div>
-                    </a>
-                </div>
+                        </a>
+                    </div>
+                </form>
             </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>Status</h4>
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>
+                        Service
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        Reddit
+                    </td>
+                    <td>
+                        Logged out
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Imgur
+                    </td>
+                    <td>
+                        Logged out
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Readability
+                    </td>
+                    <td>
+                        Logged out
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Evernote
+                    </td>
+                    <td>
+                        Logged out
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
     <br/>
@@ -107,7 +162,15 @@
             </div>
         </div>
         <div class="col-md-3">
-
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
         </div>
     </div>
 </div>
@@ -117,6 +180,11 @@
 $(function() {
   $.material.init();
 });
+
+
+
+
+
 
 </script>
 
