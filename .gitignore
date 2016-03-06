@@ -3,7 +3,6 @@
 index.txt
 *.config
 *.jpg
-*.html
 test.py
 SRDownloads/
 src/
