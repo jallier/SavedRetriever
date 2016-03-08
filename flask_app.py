@@ -1,10 +1,14 @@
 from flask import Flask, render_template, url_for, request, flash, redirect
+from flask_sqlalchemy import SQLAlchemy
 
 from Resources.forms import SettingsForm
 
 app = Flask(__name__)
 app.config.from_object("config")
+db = SQLAlchemy(app)
 
+#import models so db knows where the models are
+from Resources import models
 
 @app.route("/")
 def main():

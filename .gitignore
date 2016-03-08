@@ -7,3 +7,6 @@ test.py
 SRDownloads/
 src/
 SR.log
+*.db
+db_design.txt
+db_repository/
