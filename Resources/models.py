@@ -29,3 +29,13 @@ class Images(db.Model):
 
     def __repr__(self):
         return '<FilePath %s>' % self.file_path
+
+
+class Settings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    setting_name = db.Column(db.String(32), unique=True)
+    setting_value = db.Column(db.String(128))
+    setting_type = db.Column(db.Integer)
+
+    def __repr__(self):
+        return '<Setting %s>' % self.setting_name

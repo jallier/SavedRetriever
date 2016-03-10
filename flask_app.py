@@ -7,8 +7,9 @@ app = Flask(__name__)
 app.config.from_object("config")
 db = SQLAlchemy(app)
 
-#import models so db knows where the models are
+# import models so db knows where the models are
 from Resources import models
+
 
 @app.route("/")
 def main():
