@@ -32,6 +32,11 @@ class Images(db.Model):
 
 
 class Settings(db.Model):
+    """
+     setting_type is int, where
+     0 = String
+     1 = boolean
+    """
     id = db.Column(db.Integer, primary_key=True)
     setting_name = db.Column(db.String(32), unique=True)
     setting_value = db.Column(db.String(128))
