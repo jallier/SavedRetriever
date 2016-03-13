@@ -23,8 +23,8 @@ def settings():
     reddit_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
     if not form.validate_on_submit():
         flash("Please enter keys for required services")
-    return render_template('settings.html', form=form, reddit_token=reddit_token, imgur_token=None,
-                           readability_token=None, evernote_token=None)
+    return render_template('settings.html', form=form, reddit_token=reddit_token, readability_token=None,
+                           evernote_token=None)
 
 
 @app.route("/reddit_wizard")

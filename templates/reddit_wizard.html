@@ -1,44 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-
-    <!-- Material Design fonts -->
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700">
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/icon?family=Material+Icons">
-
-    <!-- Bootstrap -->
-    <script src="{{url_for('static', filename='bootstrap/js/jquery-1.12.1.min.js')}}"></script>
-    <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
-    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='bootstrap/css/bootstrap.min.css')}}">
-
-    <!-- Bootstrap Material Design -->
-    <link rel="stylesheet" type="text/css"
-          href="{{url_for('static', filename='bootstrap-material/dist/css/bootstrap-material-design.css')}}">
-    <link rel="stylesheet" type="text/css"
-          href="{{url_for('static', filename='bootstrap-material/dist/css/ripples.min.css')}}">
-    <script src="{{url_for('static', filename='bootstrap-material/dist/js/ripples.min.js')}}"></script>
-    <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
-
-    <title>SavedRetriever Settings</title>
-</head>
-<body>
-<div class="bs-component">
-    <div class="navbar navbar-default">
-        <div class="container-fluid">
-            <div class="navbar-header navbar-brand">
-                SavedRetriever
-            </div>
-            <div class="navbar-collapse collapse navbar-responsive-collapse">
-                <ul class="nav navbar-nav">
-                    <li><a href="/">Home</a></li>
-                    <li class="active"><a href="/settings">Settings</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
+{% extends "wizard_base.html" %}
+{% block content %}
 <div class="container">
     <div class="row">
         <div class="col-md-12">
@@ -63,31 +24,19 @@
                 </div>
                 <div class="form-group control-label is-empty">
                     <label class="control-label">Reddit OAuth Token</label>
-                    <input class="form-control" type="text" value="{% if refresh_token is not none %} {{refresh_token}} {% endif %}">
+                    <input class="form-control" type="text"
+                           value="{% if refresh_token is not none %} {{refresh_token}} {% endif %}">
                     <span class="material-input"></span>
                 </div>
+            </div>
+            <div class="bs-component">
+                <a href="readability_wizard" class="btn btn-raised btn-primary pull-right">
+                    Next Step
+                    <div class="ripple-container"></div>
+                </a>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!--Initialize the ripple effect-->
-<script type="text/javascript">
-$(function() {
-  $.material.init();
-});
-
-
-
-
-
-
-
-
-
-
-
-</script>
-
-</body>
-</html>

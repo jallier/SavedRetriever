@@ -58,3 +58,4 @@ SR uses the following 3rd party libraries:
  - [Readability API](https://github.com/arc90/python-readability-api)
  - [Imgur API](https://github.com/Imgur/imgurpython)
  - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+ - [Lxml](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) Required for windows.

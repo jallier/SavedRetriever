@@ -67,11 +67,6 @@
                         {{ form.reddit_token(size=50, class_="form-control", value=reddit_token.setting_value) }}
                         <span class="material-input"></span>
                     </div>
-                    <div class="form-group is-empty {% if imgur_token is not none %} control-label {% else %} label-floating {% endif %}">
-                        <label class="control-label" for="focusedInput2">Imgur OAuth Token</label>
-                        {{ form.imgur_token(size=50, class_="form-control") }}
-                        <span class="material-input"></span>
-                    </div>
                     <div class="form-group is-empty {% if readability_token is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label" for="focusedInput3">Readability OAuth Token</label>
                         {{ form.readability_token(size=50, class_="form-control") }}
@@ -121,14 +116,6 @@
                     </td>
                     <td>
                         {% if reddit_token.token_authorised == false %} Logged out {% else %} Logged in {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        Imgur
-                    </td>
-                    <td>
-                        Logged out
                     </td>
                 </tr>
                 <tr>
