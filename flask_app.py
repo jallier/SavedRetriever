@@ -20,9 +20,11 @@ def main():
 @app.route("/settings", methods=['GET', 'POST'])
 def settings():
     form = SettingsForm()
+    reddit_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
     if not form.validate_on_submit():
         flash("Please enter keys for required services")
-    return render_template('settings.html', form=form)
+    return render_template('settings.html', form=form, reddit_token=reddit_token, imgur_token=None,
+                           readability_token=None, evernote_token=None)
 
 
 @app.route("/reddit_wizard")
@@ -33,10 +35,10 @@ def reddit_wizard():
     redirect_uri = 'http://127.0.0.1:5000/authorize_callback'
     scope = 'identity history read'
     duration = 'permanent'
-    refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
+    refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first().setting_value
     return render_template('reddit_wizard.html', client_id=client_id, response_type=response_type, state=state,
                            redirect_uri=redirect_uri, scope=scope, duration=duration,
-                           refresh_token=refresh_token.setting_value)
+                           refresh_token=refresh_token)
 
 
 @app.route("/authorize_callback")
@@ -45,7 +47,8 @@ def authorize_callback():
     refresh_token = auth.reddit_oauth_wizard(request.args.get('code'))
     reddit_db_entry = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
     if reddit_db_entry is None:
-        s = models.Settings(setting_name='reddit_refresh_token', setting_value=refresh_token, setting_type=0)
+        s = models.Settings(setting_name='reddit_refresh_token', setting_value=refresh_token, setting_type=0,
+                            token_authorised=True)
         db.session.add(s)
     else:
         s = reddit_db_entry

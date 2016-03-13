@@ -40,6 +40,7 @@ class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     setting_name = db.Column(db.String(32), unique=True)
     setting_value = db.Column(db.String(128))
+    token_authorised = db.Column(db.Boolean)
     setting_type = db.Column(db.Integer)
 
     def __repr__(self):

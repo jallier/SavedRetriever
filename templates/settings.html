@@ -61,23 +61,23 @@
             <div class="bs-component">
                 <form method="post">
                     {{ form.hidden_tag() }}
-                    <div class="form-group label-floating is-empty">
+                    <div class="form-group is-empty {% if reddit_token.setting_value is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label" for="focusedInput1">Reddit OAuth Token</label>
-                        <!--<input class="form-control" id="focusedInput1" type="text" data-cip-id="focusedInput1"/>-->
-                        {{ form.reddit_token(size=50, class_="form-control") }}
+
+                        {{ form.reddit_token(size=50, class_="form-control", value=reddit_token.setting_value) }}
                         <span class="material-input"></span>
                     </div>
-                    <div class="form-group label-floating is-empty">
+                    <div class="form-group is-empty {% if imgur_token is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label" for="focusedInput2">Imgur OAuth Token</label>
                         {{ form.imgur_token(size=50, class_="form-control") }}
                         <span class="material-input"></span>
                     </div>
-                    <div class="form-group label-floating is-empty">
+                    <div class="form-group is-empty {% if readability_token is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label" for="focusedInput3">Readability OAuth Token</label>
                         {{ form.readability_token(size=50, class_="form-control") }}
                         <span class="material-input"></span>
                     </div>
-                    <div class="form-group label-floating is-empty">
+                    <div class="form-group is-empty {% if evernote_token is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label" for="focusedInput4">Evernote OAuth Token - Leave blank if not using
                             Evernote</label>
                         {{ form.evernote_token(size=50, class_="form-control") }}
@@ -120,7 +120,7 @@
                         Reddit
                     </td>
                     <td>
-                        Logged out
+                        {% if reddit_token.token_authorised == false %} Logged out {% else %} Logged in {% endif %}
                     </td>
                 </tr>
                 <tr>
