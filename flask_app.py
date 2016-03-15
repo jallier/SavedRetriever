@@ -1,5 +1,7 @@
+from threading import Thread
+
 import praw
-from flask import Flask, render_template, url_for, request, flash, redirect
+from flask import Flask, render_template, request, flash
 from flask_sqlalchemy import SQLAlchemy
 
 from Resources.forms import SettingsForm
@@ -73,6 +75,18 @@ def test():
 
     return r.get_me().name
 
+
+@app.route('/thread')
+def thread():
+    t = Thread(target=tester)
+    t.start()
+    return 'ayy'
+
+
+def tester():
+    import time
+    time.sleep(5)
+    print("slept")
 
 if __name__ == "__main__":
     app.run(debug=True)
