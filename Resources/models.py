@@ -3,7 +3,8 @@ from flask_app import db
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    permalink = db.Column(db.String(64), index=True, unique=True)
+    code = db.Column(db.String(14), unique=True, index=True)
+    permalink = db.Column(db.String(64), unique=True)
     title = db.Column(db.String(255))
     body_content = db.Column(db.String(10000))
     date = db.Column(db.DateTime)

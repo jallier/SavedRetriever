@@ -21,6 +21,14 @@
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
 
     <title>SavedRetriever</title>
+
+    <script>
+        $(document).ready(function() {
+            $("#run_downloader").click(function(){
+                $.post('/run').done()
+            });
+        });
+    </script>
 </head>
 <body>
 <div class="bs-component">
@@ -31,7 +39,7 @@
             </div>
             <div class="navbar-collapse collapse navbar-responsive-collapse">
                 <ul class="nav navbar-nav">
-                    <li class="active"><a href="javascript:void(0)">Home</a></li>
+                    <li class="active"><a href="/">Home</a></li>
                     <li><a href="{{ url_for('settings') }}">Settings</a></li>
                 </ul>
             </div>
@@ -51,10 +59,10 @@
                         Access your saved posts from Reddit
                     </p>
                     <div>
-                        <form action="/run" method="post">
-                        <input type="submit" class="btn btn-raised btn-info" value="Refresh Posts">
-                        <div class="ripple-container"></div>
-                        </form>
+                        <a href="javascript:void(0)" id="run_downloader" class="btn btn-raised btn-info">
+                            Refresh Posts
+                            <div class="ripple-container"></div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -84,6 +92,8 @@
 $(function() {
   $.material.init();
 });
+
+
 
 
 </script>

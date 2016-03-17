@@ -1,9 +1,11 @@
+import logging
 from threading import Thread
 
 import praw
 from flask import Flask, render_template, request, flash
 from flask_sqlalchemy import SQLAlchemy
 
+# import download as DownloadClient
 from Resources.forms import SettingsForm
 
 app = Flask(__name__)
@@ -12,11 +14,26 @@ db = SQLAlchemy(app)
 
 # import models so db knows where the models are
 from Resources import models
+from Resources.DownloadThread import DownloadThread
+
+mythread = DownloadThread(db, logging.getLogger('werkzeug'))
+# mythread = Thread()
+thread_status = 0
 
 
 @app.route("/")
 def main():
     return render_template('index.html', posts={1, 2, 3, 4, 5})
+
+
+@app.route('/run', methods=['GET', 'POST'])
+def run():
+    global mythread, thread_status
+    if thread_status == 0 or 2:
+        mythread.start()
+        thread_status = 1
+
+    return('', 204)  # empty http response
 
 
 @app.route("/settings", methods=['GET', 'POST'])
@@ -47,7 +64,7 @@ def reddit_wizard():
 def authorize_callback():
     from Resources import reddit_oauth_wizard as auth
     refresh_token = auth.reddit_oauth_wizard(request.args.get('code'))
-    reddit_db_entry = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
+    reddit_db_entry = db.session.query(models.Settings).filter_by(setting_name='reddit_refresh_token').first()
     if reddit_db_entry is None:
         s = models.Settings(setting_name='reddit_refresh_token', setting_value=refresh_token, setting_type=0,
                             token_authorised=True)
@@ -87,6 +104,7 @@ def tester():
     import time
     time.sleep(5)
     print("slept")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

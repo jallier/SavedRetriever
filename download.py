@@ -204,7 +204,7 @@ def subreddit_linker(input_text):
     return input_text
 
 
-def main():
+def run():
     if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
         first_run()  # Authenticate and generate the credentials file.
 
@@ -528,4 +528,4 @@ def main():
 if __name__ == '__main__':
     with warnings.catch_warnings():  # This is to ignore ssl socket unclosed warnings.
         warnings.simplefilter('ignore')
-        main()
+        run()
