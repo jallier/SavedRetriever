@@ -79,8 +79,6 @@ class DownloadThread(Thread):
         #     warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
         #     logger = create_logger()
 
-        print('running now')
-
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
         logger = self.create_logger(log_to_console=True)
 
@@ -151,7 +149,7 @@ class DownloadThread(Thread):
 
             if name not in index:  # file has not been downloaded
                 permalink = i.permalink
-                author = i.author
+                author = str(i.author)
                 title = i.link_title if hasattr(i, 'link_title') else i.title
                 # ========== #
                 # IS COMMENT #
@@ -169,8 +167,12 @@ class DownloadThread(Thread):
                     if len(list(user)) == 0:  # user is not in db
                         user = models.Author(username=author)
                         self.db.session.add(user)
-                    post = models.Post(permalink=permalink, title=title, body_content=body, date=date, author_id=user, code=name)
+                        self.db.session.commit()
+                    else:
+                        user = user.first()
+                    post = models.Post(permalink=permalink, title=title, body_content=body, date=date, author_id=user.id, code=name)
                     self.db.session.add(post)
+                    self.db.session.commit()
 
                     # if delete_files is False:
                     #     file_name = html_writer(path, name, output)
