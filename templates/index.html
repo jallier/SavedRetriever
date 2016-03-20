@@ -28,7 +28,22 @@
                 $.post('/run').done()
             });
         });
+
     </script>
+    <style>
+        .panel-heading{
+            height:50px;
+            overflow: hidden;
+        }
+        .panel-body{
+            height:200px;
+            overflow: hidden;
+        }
+        .sr-image{
+            width: 100%;
+            height:100%;
+        }
+    </style>
 </head>
 <body>
 <div class="bs-component">
@@ -59,6 +74,12 @@
                         Access your saved posts from Reddit
                     </p>
                     <div>
+                        <a href="javascript:window.location.reload()" class="btn btn-raised btn-info">
+                            Refresh Page
+                            <div class="ripple-container"></div>
+                        </a>
+                    </div>
+                    <div>
                         <a href="javascript:void(0)" id="run_downloader" class="btn btn-raised btn-info">
                             Refresh Posts
                             <div class="ripple-container"></div>
@@ -75,9 +96,9 @@
         <div class="col-md-3">
             <div class="bs-component">
                 <div class="panel panel-default">
-                    <div class="panel-heading">Heading</div>
+                    <div class="panel-heading">{{ post.title }}</div>
                     <div class="panel-body">
-                        Test
+                        {{ post.body_content|safe }}
                     </div>
                 </div>
             </div>
@@ -92,6 +113,7 @@
 $(function() {
   $.material.init();
 });
+
 
 
 

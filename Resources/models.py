@@ -6,7 +6,7 @@ class Post(db.Model):
     code = db.Column(db.String(14), unique=True, index=True)
     permalink = db.Column(db.String(64), unique=True)
     title = db.Column(db.String(255))
-    body_content = db.Column(db.String(10000))
+    body_content = db.Column(db.Text)
     date = db.Column(db.DateTime)
     author_id = db.Column(db.Integer, db.ForeignKey('author.id'))
 
@@ -25,6 +25,7 @@ class Author(db.Model):
 
 class Images(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    file_name = db.Column(db.String(32))
     file_path = db.Column(db.String(255), index=True, unique=True)
     #Add in fk relationship for posts
 

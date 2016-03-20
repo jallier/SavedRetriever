@@ -2,7 +2,7 @@ import logging
 from threading import Thread
 
 import praw
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
 
 # import download as DownloadClient
@@ -23,7 +23,15 @@ thread_status = 0
 
 @app.route("/")
 def main():
-    return render_template('index.html', posts={1, 2, 3, 4, 5})
+    posts = db.session.query(models.Post)
+    return render_template('index.html', posts=posts)
+
+
+@app.route('/img/<filename>')
+def show_image(filename):
+    # image = db.session.query(models.Images)
+    image = models.Images.query.filter_by(file_name=filename).first().file_path
+    return send_file(image)
 
 
 @app.route('/run', methods=['GET', 'POST'])
@@ -33,7 +41,7 @@ def run():
         mythread.start()
         thread_status = 1
 
-    return('', 204)  # empty http response
+    return ('', 204)  # empty http response
 
 
 @app.route("/settings", methods=['GET', 'POST'])
@@ -54,7 +62,8 @@ def reddit_wizard():
     redirect_uri = 'http://127.0.0.1:5000/authorize_callback'
     scope = 'identity history read'
     duration = 'permanent'
-    refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first().setting_value
+    refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
+    if refresh_token is not None: refresh_token = refresh_token.setting_value
     return render_template('reddit_wizard.html', client_id=client_id, response_type=response_type, state=state,
                            redirect_uri=redirect_uri, scope=scope, duration=duration,
                            refresh_token=refresh_token)
@@ -91,19 +100,6 @@ def test():
     r.set_access_credentials(**access_information)
 
     return r.get_me().name
-
-
-@app.route('/thread')
-def thread():
-    t = Thread(target=tester)
-    t.start()
-    return 'ayy'
-
-
-def tester():
-    import time
-    time.sleep(5)
-    print("slept")
 
 
 if __name__ == "__main__":

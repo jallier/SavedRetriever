@@ -1,12 +1,13 @@
 import datetime
+import json
 import logging
 import warnings
 # import json
-# import urllib.request
+import urllib.request
 import os
 # import argparse
 import re
-# import urllib.error
+import urllib.error
 # import shutil
 import praw
 # import imgurpython.helpers.error
@@ -35,10 +36,28 @@ class DownloadThread(Thread):
     def read_command_args(self):
         pass
 
-    def create_logger(self, log_to_console=True):
+    def create_logger(self):
         return self.logger
-        # return CommonUtils.Utils.create_logger(log_to_console)
 
+    def image_saver(self, url, filename):
+        """
+        Saves an image to disk in the location specified
+        :param url: url of the image to download
+        :type url: string
+        :param filename: path and filename of file to download
+        :type filename: string
+        :return: If image was downloaded successfully
+        :rtype: bool
+        """
+        try:
+            with urllib.request.urlopen(url) as response, open(filename, "wb") as out_file:
+                data = response.read()
+                out_file.write(data)
+        except OSError:
+            self.logger.warn("Unable to save image")
+        except urllib.error.HTTPError:
+            return False
+        return True
 
     def subreddit_linker(self, input_text):
         """
@@ -57,39 +76,13 @@ class DownloadThread(Thread):
         return input_text
 
     def downloader(self):
-        # if not os.path.isfile('credentials.config'):  # if credentials file does not exist, start the first run function
-            #first_run()  # Authenticate and generate the credentials file.
-
-        # command line switches function
-        # args = self.read_command_args()
-        # use_evernote = args.e
-        # debug_mode = args.debug
-        # delete_files = args.t if use_evernote is True else False
-        # path = args.p
-        # info_mode = args.i
-        #
-        # if debug_mode:
-        #     logger = create_logger(log_to_console=True)
-        #     logger.setLevel(logging.DEBUG)
-        #     logger.info('Warning - Debug mode active. Files will be downloaded, but not added to index')
-        # elif info_mode:
-        #     warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
-        #     logger = create_logger(log_to_console=True)
-        # else:
-        #     warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
-        #     logger = create_logger()
-
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
-        logger = self.create_logger(log_to_console=True)
+        logger = self.create_logger()
 
         logger.info("\n###########\nStarting SR\n###########")
 
-        # Create the downloads folder on the specified path, or in the dir where file is stored.
-        # if path is not "":
-        #     path = path[0]
-        # else:
-        path = os.getcwd()
-        path += "/SRDownloads"
+        # path = os.getcwd()
+        path = "static/SRDownloads"
 
         if not os.path.exists(path):
             os.makedirs(path)
@@ -120,21 +113,8 @@ class DownloadThread(Thread):
             logger.error("Unable to create index")
             raise SystemExit
 
-        # if use_evernote is True:
-        #     enclient = evernoteWrapper.Client(credentials['evernote']['dev_token'], 'Saved from Reddit')
-
-        # html_index_file = None
-        # if delete_files is False:  # only create index if we're going to use it.
-        #     html_index_file = html_index.index(r.get_me().name, path)
-
-        # try:
-        #     ind = open('index.txt', 'a')  # open index file for appending
-        # except OSError:
-        #     logger.error("Unable to open index file for writing")
-        #     raise SystemExit
-
         logger.info("Beginning to save files to db...")
-        for i in r.get_me().get_saved(limit=1):
+        for i in r.get_me().get_saved(limit=2):
             if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
                 logger.debug('Refreshing Reddit token')
                 r.refresh_access_information(access_information['refresh_token'])
@@ -150,103 +130,131 @@ class DownloadThread(Thread):
             if name not in index:  # file has not been downloaded
                 permalink = i.permalink
                 author = str(i.author)
+                user = models.Author.query.filter_by(username=author)
+                if user.count() == 0:  # user is not in db
+                    user = models.Author(username=author)
+                    self.db.session.add(user)
+                    self.db.session.commit()
+                else:
+                    user = user.first()
                 title = i.link_title if hasattr(i, 'link_title') else i.title
+                date = datetime.datetime.fromtimestamp(i.created)
                 # ========== #
                 # IS COMMENT #
                 # ========== #
                 if hasattr(i, 'body_html'):
                     logger.debug("{} is comment".format(name))
                     body = i.body_html
-                    date = datetime.datetime.fromtimestamp(i.created)
+                    # date = datetime.datetime.fromtimestamp(i.created)
 
                     # html output
                     body = self.subreddit_linker(body)
                     # output = html_output_string(permalink, author, body, title)
 
-                    user = models.Author.query.filter_by(username=author)
-                    if len(list(user)) == 0:  # user is not in db
-                        user = models.Author(username=author)
-                        self.db.session.add(user)
-                        self.db.session.commit()
-                    else:
-                        user = user.first()
-                    post = models.Post(permalink=permalink, title=title, body_content=body, date=date, author_id=user.id, code=name)
+                    post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
+                                       author_id=user.id, code=name)
                     self.db.session.add(post)
                     self.db.session.commit()
 
-                    # if delete_files is False:
-                    #     file_name = html_writer(path, name, output)
-
-                    # en api section
-                    # if use_evernote is True:
-                    #     enclient.new_note(title)
-                    #     enclient.add_html(output)
-                    #     enclient.add_tag(*evernote_tags)  # the * is very important. It unpacks the tags tuple properly
-                    #     note = enclient.create_note()
                 # ============ #
                 # IS SELF-POST #
                 # ============ #
-                # elif hasattr(i, 'is_self') and i.is_self is True:
-                #     logger.debug('{} is self-post'.format(name))
-                #     text = i.selftext_html if i.selftext_html is not None else ""
-                #
-                #     # html output
-                #     text = self.subreddit_linker(text)
-                #     output = html_output_string(permalink, author, text, title)
-                #     if delete_files is False:
-                #         file_name = html_writer(path, name, output)
-                #
-                #     # en api section
-                #     if use_evernote is True:
-                #         enclient.new_note(title)
-                #         enclient.add_tag(*evernote_tags)
-                #         enclient.add_html(output)
-                #         note = enclient.create_note()
-                # # ====================== #
-                # # IS DIRECT LINKED IMAGE #
-                # # ====================== #
-                # elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif', 'gifv', 'pdf']:
-                #     """
-                #     Need to check file types and test pdf. How does this handle gfycat and webm? Can EN display that inline?
-                #     The regex in the if is to strip out non-valid filetype chars.
-                #     """
-                #     logger.debug('{} is direct linked image'.format(name))
-                #     url = i.url
-                #     base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
-                #         -1]))  # filename for image. regex same as above.
-                #     filename = path + "/" + base_filename
-                #
-                #     # image downloader section
-                #     if os.path.exists(filename) and (os.path.getsize(filename) > 0):  # If image exists and is valid
-                #         image_downloaded = True
-                #         logger.info("Image already exists - {}".format(base_filename))
-                #     else:
-                #         image_downloaded = image_saver(url, filename)
-                #         logger.info('Downloaded image - {}'.format(base_filename))
-                #
-                #     if image_downloaded:
-                #         # write image as <img> or link to local pdf downloaded in html file
-                #         if filename.split('.')[-1] == 'pdf':
-                #             img = '<a href="{}">Click here for link to downloaded pdf</a>'.format(base_filename)
-                #         else:
-                #             img = '<br><a href="{0}"><img src="{0}"></a>'.format(
-                #                 base_filename)  # html for embedding in html file
-                #     else:
-                #         img = "Image failed to download - It may be temporarily or permanently unavailable"
-                #
-                #     # Evernote api section
-                #     if use_evernote is True:
-                #         enclient.new_note(title)
-                #         enclient.add_tag(*evernote_tags)
-                #         enclient.add_html(html_output_string_image(permalink, author, "", title))  # should add body="" in the function
-                #         if image_downloaded:
-                #             enclient.add_resource(filename)
-                #         note = enclient.create_note()
-                #
-                #     if delete_files is False:
-                #         file_name = html_writer(path, name, html_output_string_image(permalink, author, img, title))
-                #     else:
-                #         os.remove(filename)
+                elif hasattr(i, 'is_self') and i.is_self is True:
+                    logger.debug('{} is self-post'.format(name))
+                    text = i.selftext_html if i.selftext_html is not None else ""
+
+                    # html output
+                    text = self.subreddit_linker(text)
+                    # output = html_output_string(permalink, author, text, title)
+
+                    post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
+                                       author_id=user.id, code=name)
+                    self.db.session.add(post)
+                    self.db.session.commit()
+
+                # ====================== #
+                # IS DIRECT LINKED IMAGE #
+                # ====================== #
+                elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif',
+                                                                                                  'gifv', 'pdf']:
+                    logger.debug('{} is direct linked image'.format(name))
+                    url = i.url
+                    base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
+                        -1]))  # filename for image. regex same as above.
+                    filename = path + "/" + base_filename
+
+                    # image downloader section
+                    if os.path.exists(filename) and (os.path.getsize(filename) > 0):  # If image exists and is valid
+                        image_downloaded = True
+                        logger.info("Image already exists - {}".format(base_filename))
+                    else:
+                        image_downloaded = self.image_saver(url, filename)
+
+                    if image_downloaded:
+                        logger.info('Downloaded image - {}'.format(base_filename))
+                        image = models.Images(file_name=base_filename, file_path=filename)
+                        self.db.session.add(image)
+                        self.db.session.commit()
+
+                        # This should be rewritten to actually use the db
+                        if filename.split('.')[-1] == 'pdf':
+                            img = '<a href="static/SRDownloads/{}">Click here for link to downloaded pdf</a>'.format(
+                                base_filename)
+                        else:
+                            img = '<a href="img/{0}"><img class="sr-image" src="img/{0}">' \
+                                  '</a>'.format(base_filename)
+
+                    else:
+                        img = "Image failed to download - It may be temporarily or permanently unavailable"
+
+                    post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
+                                       author_id=user.id, code=name)
+                    self.db.session.add(post)
+                    self.db.session.commit()
+
+                # =============== #
+                # IS GFYCAT IMAGE #
+                # =============== #
+                elif hasattr(i, 'url') and 'gfycat.com' in i.url:
+                    json_url = 'https://gfycat.com/cajax/get/'
+                    id = i.url.split('/')[-1]
+                    url = json_url + id
+                    data = None
+                    from pprint import pprint
+                    try:
+                        with urllib.request.urlopen(url) as response:
+                            data = response.read().decode('utf-8')
+                    except urllib.error.HTTPError:
+                        logger.warn("Unable to open gfycat url" + url)
+
+                    json_data = json.loads(data)
+                    base_filename = "{}_video.{}".format(name, 'mp4')  # filename for image. regex same as above.
+                    filename = path + "/" + base_filename
+                    if os.path.exists(filename) and (os.path.getsize(filename) > 0):  # If image exists and is valid
+                        image_downloaded = True
+                        logger.info("Image already exists - {}".format(base_filename))
+                    else:
+                        image_downloaded = self.image_saver(json_data['gfyItem']['mp4Url'], filename)
+
+                    if image_downloaded:
+                        logger.info('Downloaded video - {}'.format(base_filename))
+                        image = models.Images(file_name=base_filename, file_path=filename)
+                        self.db.session.add(image)
+                        self.db.session.commit()
+
+                        # This should be rewritten to actually use the db
+                        img = '<video class="sr-image" id="share-video" autoplay="" muted="" loop="">' \
+                              '<source id="mp4Source" src="{}" type="video/mp4">Sorry, your browser doesn\'t support ' \
+                              'HTML5 video.  </video>'.format(base_filename)
+                    else:
+                        img = "Image failed to download - It may be temporarily or permanently unavailable"
+
+                    post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
+                                       author_id=user.id, code=name)
+                    self.db.session.add(post)
+                    self.db.session.commit()
+                    # pprint(json_data)
+
                 # # ============== #
                 # # IS IMGUR ALBUM #
                 # # ============== #
