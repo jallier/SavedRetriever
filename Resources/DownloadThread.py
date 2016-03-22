@@ -25,16 +25,15 @@ from Resources import CommonUtils
 
 
 class DownloadThread(Thread):
-    def __init__(self, db, logger):
+    def __init__(self, db, logger, output_queue):
         Thread.__init__(self)
         self.db = db
         self.logger = logger
+        self.output_queue = output_queue
+        self.output_queue.put(0)
 
     def run(self):
         self.downloader()
-
-    def read_command_args(self):
-        pass
 
     def create_logger(self):
         return self.logger
@@ -75,7 +74,12 @@ class DownloadThread(Thread):
             input_text = re.sub(full_match, 'href="http://www.reddit.com/r/{}'.format(match[-1]), input_text)
         return input_text
 
+    def set_output_thread_condition(self, condition):
+        self.output_queue.get(False)
+        self.output_queue.put(condition)
+
     def downloader(self):
+        self.set_output_thread_condition(1)
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
         logger = self.create_logger()
 
@@ -244,7 +248,7 @@ class DownloadThread(Thread):
 
                         # This should be rewritten to actually use the db
                         img = '<video class="sr-image" id="share-video" autoplay="" muted="" loop="">' \
-                              '<source id="mp4Source" src="{}" type="video/mp4">Sorry, your browser doesn\'t support ' \
+                              '<source id="mp4Source" src="img/{}" type="video/mp4">Sorry, your browser doesn\'t support ' \
                               'HTML5 video.  </video>'.format(base_filename)
                     else:
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
@@ -373,6 +377,7 @@ class DownloadThread(Thread):
         # end of for loop
         # ind.close()
         logger.info("All items downloaded")
+        self.set_output_thread_condition(2)
         # if delete_files is False:
         #     html_index_file.save_and_close()
         # else:  # try remove downloads if -t is set, but don't force it if directory has things in it already.

@@ -1,5 +1,5 @@
 import logging
-from threading import Thread
+from queue import Queue
 
 import praw
 from flask import Flask, render_template, request, flash, send_file
@@ -16,9 +16,8 @@ db = SQLAlchemy(app)
 from Resources import models
 from Resources.DownloadThread import DownloadThread
 
-mythread = DownloadThread(db, logging.getLogger('werkzeug'))
-# mythread = Thread()
-thread_status = 0
+thread_status_queue = Queue()
+mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)
 
 
 @app.route("/")
@@ -36,10 +35,16 @@ def show_image(filename):
 
 @app.route('/run', methods=['GET', 'POST'])
 def run():
-    global mythread, thread_status
-    if thread_status == 0 or 2:
+    global mythread, thread_status, thread_status_queue
+    thread_status = thread_status_queue.get()
+    thread_status_queue.put(thread_status)
+    if thread_status == 0:  # Thread is stopped
         mythread.start()
-        thread_status = 1
+    elif thread_status == 1:
+        pass
+    elif thread_status == 2:  # Thread has run once; instantiate a new one
+        mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)
+        mythread.start()
 
     return ('', 204)  # empty http response
 
