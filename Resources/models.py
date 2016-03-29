@@ -5,6 +5,7 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(14), unique=True, index=True)
     permalink = db.Column(db.String(64), unique=True)
+    type = db.Column(db.String(10))
     title = db.Column(db.String(255))
     body_content = db.Column(db.Text)
     date = db.Column(db.DateTime)

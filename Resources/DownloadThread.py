@@ -114,7 +114,7 @@ class DownloadThread(Thread):
             raise SystemExit
 
         logger.info("Beginning to save files to db...")
-        for i in r.get_me().get_saved(limit=2):
+        for i in r.get_me().get_saved(limit=4):
             if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
                 logger.debug('Refreshing Reddit token')
                 r.refresh_access_information(access_information['refresh_token'])
@@ -152,7 +152,7 @@ class DownloadThread(Thread):
                     # output = html_output_string(permalink, author, body, title)
 
                     post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
-                                       author_id=user.id, code=name)
+                                       author_id=user.id, code=name, type='text')
                     self.db.session.add(post)
                     self.db.session.commit()
 
@@ -168,7 +168,7 @@ class DownloadThread(Thread):
                     # output = html_output_string(permalink, author, text, title)
 
                     post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
-                                       author_id=user.id, code=name)
+                                       author_id=user.id, code=name, type='text')
                     self.db.session.add(post)
                     self.db.session.commit()
 
@@ -201,14 +201,14 @@ class DownloadThread(Thread):
                             img = '<a href="static/SRDownloads/{}">Click here for link to downloaded pdf</a>'.format(
                                 base_filename)
                         else:
-                            img = '<a href="img/{0}"><img class="sr-image" src="img/{0}">' \
+                            img = '<a href="/img/{0}"><img class="sr-image img-responsive" src="/img/{0}">' \
                                   '</a>'.format(base_filename)
 
                     else:
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
-                                       author_id=user.id, code=name)
+                                       author_id=user.id, code=name, type='image')
                     self.db.session.add(post)
                     self.db.session.commit()
 
@@ -242,14 +242,14 @@ class DownloadThread(Thread):
                         self.db.session.commit()
 
                         # This should be rewritten to actually use the db
-                        img = '<video class="sr-image" id="share-video" autoplay="" muted="" loop="">' \
-                              '<source id="mp4Source" src="img/{}" type="video/mp4">Sorry, your browser doesn\'t support ' \
+                        img = '<video class="sr-image img-responsive" id="share-video" autoplay="" muted="" loop="">' \
+                              '<source id="mp4Source" src="/img/{}" type="video/mp4">Sorry, your browser doesn\'t support ' \
                               'HTML5 video.  </video>'.format(base_filename)
                     else:
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
-                                       author_id=user.id, code=name)
+                                       author_id=user.id, code=name, type='video')
                     self.db.session.add(post)
                     self.db.session.commit()
                     # pprint(json_data)
@@ -293,8 +293,9 @@ class DownloadThread(Thread):
                         image_link = image.link
                         # sets up downloaded filename and html for embedding image
                         base_filename = "{}_image.{}".format(image_id, image_filetype)
-                        img = '<div><h3>{0}</h3><a href="img/{1}"><img src="img/{1}">' \
-                              '</a><br/>{2}</div>'.format(image_name, base_filename, image_description)
+                        img = '<div class="col-md-3"><h3>{0}</h3><a href="/img/{1}"><img src="/img/{1}"' \
+                              ' class="sr-image img-responsive"></a><br/>{2}</div>'.format(image_name, base_filename,
+                                                                                           image_description)
                         filename = img_path + "/" + base_filename
                         # only download if file doesn't already exist
                         if os.path.exists(filename) and (os.path.getsize(filename) > 0):
@@ -311,7 +312,7 @@ class DownloadThread(Thread):
 
                         body += img
                     post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
-                                       author_id=user.id, code=name)
+                                       author_id=user.id, code=name, type='album')
                     self.db.session.add(post)
                     self.db.session.commit()
 
