@@ -1,0 +1,35 @@
+{% extends "post_base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div>
+                    <h1>{{ post.title }}</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="bs-component">
+                <div class="info">
+                    <h4><a href="{{ post.permalink }}">Permalink</a> submitted by {{ post.author.username }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div class="post-image">
+                    {{ post.body_content|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

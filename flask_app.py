@@ -33,6 +33,21 @@ def show_image(filename):
     return send_file(image)
 
 
+@app.route('/post/<postid>')
+def show_post(postid):
+    post = models.Post.query.filter_by(code=postid).first()
+    if post.type == 'text':
+        return render_template('post_text.html', title=post.title[0:64] + '...', post=post)
+    elif post.type == 'image':
+        return render_template('post_image.html', title=post.title[0:64] + '...', post=post)
+    elif post.type == 'album':
+        return render_template('post_album.html', title=post.title[0:64] + '...', post=post)
+    elif post.type == 'video':
+        return render_template('post_image.html', title=post.title[0:64] + '...', post=post)
+    elif post.type == 'article':
+        return render_template('post_text.html', title=post.title[0:64] + '...', post=post)
+
+
 @app.route('/run', methods=['GET', 'POST'])
 def run():
     global mythread, thread_status, thread_status_queue

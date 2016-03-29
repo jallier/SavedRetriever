@@ -96,7 +96,7 @@
         <div class="col-md-3">
             <div class="bs-component">
                 <div class="panel panel-default">
-                    <div class="panel-heading">{{ post.title }}</div>
+                    <div class="panel-heading"><a href="/post/{{ post.code }}">{{ post.title }}</a></div>
                     <div class="panel-body">
                         {{ post.body_content|safe }}
                     </div>
