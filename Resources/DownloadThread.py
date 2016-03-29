@@ -1,6 +1,5 @@
 import datetime
 import json
-import logging
 import warnings
 # import json
 import urllib.request
@@ -10,18 +9,15 @@ import re
 import urllib.error
 # import shutil
 import praw
-# import imgurpython.helpers.error
+import imgurpython.helpers.error
 import time
-from time import strftime
-from logging.handlers import RotatingFileHandler
 # from readability.readability import Document
-# from imgurpython import ImgurClient
+from imgurpython import ImgurClient
 # from Resources import evernoteWrapper
 # from Resources import firstrun
 # from Resources import html_index
 from threading import Thread
 from Resources import models
-from Resources import CommonUtils
 
 
 class DownloadThread(Thread):
@@ -224,7 +220,6 @@ class DownloadThread(Thread):
                     id = i.url.split('/')[-1]
                     url = json_url + id
                     data = None
-                    from pprint import pprint
                     try:
                         with urllib.request.urlopen(url) as response:
                             data = response.read().decode('utf-8')
@@ -259,71 +254,67 @@ class DownloadThread(Thread):
                     self.db.session.commit()
                     # pprint(json_data)
 
-                # # ============== #
-                # # IS IMGUR ALBUM #
-                # # ============== #
-                # elif hasattr(i, 'url') and 'imgur' in i.url:  # Add option to download images to folder.
-                #     logger.debug('{} is Imgur album'.format(name))
-                #     url = i.url
-                #     body = "<h2>{}</h2>".format(title)
-                #
-                #     # imgur api section
-                #     client = ImgurClient(credentials['imgur']['client_id'], credentials['imgur']['client_secret'])
-                #     pattern = '\/([A-z0-9]{5,7})'  # matches any 5-7 long word that comes after a forward slash (/).
-                #     match = re.findall(pattern, url)
-                #     gallery_id = match[-1].replace('/', '')  # removes any forward slashes for processing
-                #     gallery = []
-                #     filename = None
-                #     try:
-                #         gallery = client.get_album_images(gallery_id)
-                #     except imgurpython.helpers.error.ImgurClientError:  # if 'gallery' is actually just a lone image
-                #         try:
-                #             gallery = [client.get_image(gallery_id)]
-                #         except imgurpython.helpers.error.ImgurClientError as error:  # if gallery does not exist. Is this the best way to do this?
-                #             if debug_mode is True or error.status_code != 404:
-                #                 print("**{} - {}**".format(error.status_code, error.error_message))
-                #
-                #     # img_path = 'Downloads/{}'.format(gallery_id)
-                #     img_path = path + "/" + gallery_id
-                #     if not os.path.exists(img_path):
-                #         os.makedirs(img_path)
-                #     for image in gallery:  # add if gallery > 10, then just add a link (would be too large for the note)
-                #         image_name = image.title if image.title is not None else ""
-                #         image_description = image.description if image.description is not None else ""
-                #         image_filetype = image.type.split('/')[1]
-                #         image_id = image.id
-                #         image_link = image.link
-                #         # sets up downloaded filename and html for embedding image
-                #         base_filename = "{}_image.{}".format(image_id, image_filetype)
-                #         img = '<p><h3>{0}</h3><a href="{1}/{2}"><img src="{1}/{2}"></a><br/>{3}</p>'.format(image_name,
-                #                                                                                             gallery_id,
-                #                                                                                             base_filename,
-                #                                                                                             image_description)
-                #         filename = img_path + "/" + base_filename
-                #         if os.path.exists(filename) and (os.path.getsize(filename) > 0):  # only download if file doesn't already exist
-                #             logger.info('Image already exists - {}'.format(base_filename))
-                #         else:
-                #             image_saver(image_link, filename)
-                #             logger.info('Image downloaded - {}'.format(base_filename))
-                #         body += img
-                #
-                #     # Evernote api section
-                #     if use_evernote is True:
-                #         enclient.new_note(title)
-                #         enclient.add_tag(*evernote_tags)
-                #         if len(gallery) == 1 and filename is not None:
-                #             enclient.add_html(html_output_string_image(permalink, author, "", title))
-                #             enclient.add_resource(filename)
-                #         else:
-                #             enclient.add_html(html_output_string_image(permalink, author,
-                #             'This album is too large to embed; please see <a href="{}">here</a> for the original link.'.format(url),
-                #                                                  title))
-                #         note = enclient.create_note()
-                #
-                #     if delete_files is False:
-                #         file_name = html_writer(path, name, html_output_string_image(permalink, author, body, title))
-                #     else:
-                #         shutil.rmtree(img_path)
+                # ============== #
+                # IS IMGUR ALBUM #
+                # ============== #
+                elif hasattr(i, 'url') and 'imgur' in i.url:  # Add option to download images to folder.
+                    logger.debug('{} is Imgur album'.format(name))
+                    url = i.url
+                    body = "<h2>{}</h2>".format(title)
+
+                    # imgur api section
+                    client = ImgurClient('755357eb4cd70bd', None)
+                    pattern = '\/([A-z0-9]{5,7})'  # matches any 5-7 long word that comes after a forward slash (/).
+                    match = re.findall(pattern, url)
+                    gallery_id = match[-1].replace('/', '')  # removes any forward slashes for processing
+                    gallery = []
+                    filename = None
+                    try:
+                        gallery = client.get_album_images(gallery_id)
+                    except imgurpython.helpers.error.ImgurClientError:  # if 'gallery' is actually just a lone image
+                        try:
+                            gallery = [client.get_image(gallery_id)]
+                        except imgurpython.helpers.error.ImgurClientError as error:  # if gallery does not exist. Is this the best way to do this?
+                            if error.status_code != 404:
+                                logger.error("**{} - {}**".format(error.status_code, error.error_message))
+                            else:
+                                logger.error(error)
+
+                    # img_path = 'Downloads/{}'.format(gallery_id)
+                    # img_path = path + "/" + gallery_id
+                    img_path = path
+                    # if not os.path.exists(img_path):
+                    #     os.makedirs(img_path)
+                    for image in gallery:  # add if gallery > 10, then just add a link (would be too large for the note)
+                        image_name = image.title if image.title is not None else ""
+                        image_description = image.description if image.description is not None else ""
+                        image_filetype = image.type.split('/')[1]
+                        image_id = image.id
+                        image_link = image.link
+                        # sets up downloaded filename and html for embedding image
+                        base_filename = "{}_image.{}".format(image_id, image_filetype)
+                        img = '<div><h3>{0}</h3><a href="img/{1}"><img src="img/{1}">' \
+                              '</a><br/>{2}</div>'.format(image_name, base_filename, image_description)
+                        filename = img_path + "/" + base_filename
+                        # only download if file doesn't already exist
+                        if os.path.exists(filename) and (os.path.getsize(filename) > 0):
+                            image_downloaded = True
+                            logger.info('Image already exists - {}'.format(base_filename))
+                        else:
+                            image_downloaded = self.image_saver(image_link, filename)
+
+                        if image_downloaded:
+                            logger.info('Image downloaded - {}'.format(base_filename))
+                            image = models.Images(file_name=base_filename, file_path=filename)
+                            self.db.session.add(image)
+                            self.db.session.commit()
+
+                        body += img
+                    post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
+                                       author_id=user.id, code=name)
+                    self.db.session.add(post)
+                    self.db.session.commit()
+
                 # # ========== #
                 # # IS ARTICLE #
                 # # ========== #
