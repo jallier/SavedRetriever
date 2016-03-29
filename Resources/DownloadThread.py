@@ -1,22 +1,17 @@
 import datetime
 import json
 import warnings
-# import json
 import urllib.request
 import os
-# import argparse
 import re
 import urllib.error
-# import shutil
 import praw
 import imgurpython.helpers.error
 import time
-# from readability.readability import Document
 from imgurpython import ImgurClient
-# from Resources import evernoteWrapper
-# from Resources import firstrun
-# from Resources import html_index
 from threading import Thread
+from readability.readability import Document
+
 from Resources import models
 
 
@@ -30,9 +25,6 @@ class DownloadThread(Thread):
 
     def run(self):
         self.downloader()
-
-    def create_logger(self):
-        return self.logger
 
     def image_saver(self, url, filename):
         """
@@ -77,11 +69,10 @@ class DownloadThread(Thread):
     def downloader(self):
         self.set_output_thread_condition(1)
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
-        logger = self.create_logger()
+        logger = self.logger
 
         logger.info("\n###########\nStarting SR\n###########")
 
-        # path = os.getcwd()
         path = "static/SRDownloads"
 
         if not os.path.exists(path):
@@ -125,8 +116,6 @@ class DownloadThread(Thread):
             note = None
             evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
 
-            # logger.info('Saving post - {}'.format(name))
-
             if name not in index:  # file has not been downloaded
                 permalink = i.permalink
                 author = str(i.author)
@@ -145,12 +134,9 @@ class DownloadThread(Thread):
                 if hasattr(i, 'body_html'):
                     logger.debug("{} is comment".format(name))
                     body = i.body_html
-                    # date = datetime.datetime.fromtimestamp(i.created)
 
                     # html output
                     body = self.subreddit_linker(body)
-                    # output = html_output_string(permalink, author, body, title)
-
                     post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
                                        author_id=user.id, code=name, type='text')
                     self.db.session.add(post)
@@ -165,8 +151,6 @@ class DownloadThread(Thread):
 
                     # html output
                     text = self.subreddit_linker(text)
-                    # output = html_output_string(permalink, author, text, title)
-
                     post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
                                        author_id=user.id, code=name, type='text')
                     self.db.session.add(post)
@@ -196,7 +180,6 @@ class DownloadThread(Thread):
                         self.db.session.add(image)
                         self.db.session.commit()
 
-                        # This should be rewritten to actually use the db
                         if filename.split('.')[-1] == 'pdf':
                             img = '<a href="static/SRDownloads/{}">Click here for link to downloaded pdf</a>'.format(
                                 base_filename)
@@ -217,8 +200,8 @@ class DownloadThread(Thread):
                 # =============== #
                 elif hasattr(i, 'url') and 'gfycat.com' in i.url:
                     json_url = 'https://gfycat.com/cajax/get/'
-                    id = i.url.split('/')[-1]
-                    url = json_url + id
+                    gfy_id = i.url.split('/')[-1]
+                    url = json_url + gfy_id
                     data = None
                     try:
                         with urllib.request.urlopen(url) as response:
@@ -241,7 +224,6 @@ class DownloadThread(Thread):
                         self.db.session.add(image)
                         self.db.session.commit()
 
-                        # This should be rewritten to actually use the db
                         img = '<video class="sr-image img-responsive" id="share-video" autoplay="" muted="" loop="">' \
                               '<source id="mp4Source" src="/img/{}" type="video/mp4">Sorry, your browser doesn\'t support ' \
                               'HTML5 video.  </video>'.format(base_filename)
@@ -252,7 +234,6 @@ class DownloadThread(Thread):
                                        author_id=user.id, code=name, type='video')
                     self.db.session.add(post)
                     self.db.session.commit()
-                    # pprint(json_data)
 
                 # ============== #
                 # IS IMGUR ALBUM #
@@ -280,11 +261,8 @@ class DownloadThread(Thread):
                             else:
                                 logger.error(error)
 
-                    # img_path = 'Downloads/{}'.format(gallery_id)
-                    # img_path = path + "/" + gallery_id
                     img_path = path
-                    # if not os.path.exists(img_path):
-                    #     os.makedirs(img_path)
+
                     for image in gallery:  # add if gallery > 10, then just add a link (would be too large for the note)
                         image_name = image.title if image.title is not None else ""
                         image_description = image.description if image.description is not None else ""
@@ -316,64 +294,38 @@ class DownloadThread(Thread):
                     self.db.session.add(post)
                     self.db.session.commit()
 
-                # # ========== #
-                # # IS ARTICLE #
-                # # ========== #
-                # elif hasattr(i, 'title') and i.is_self is False:
-                #     # This section needs work. It is semi-complete. Ultimately, adding in the full article is the goal.
-                #     logger.debug('{} is article/webpage'.format(name))
-                #     url = i.url
-                #
-                #     # readability api section
-                #     parse_response = parse.get_article(url)
-                #     article = parse_response.json()
-                #     if 'content' not in article:  # if unable to parse document, manually set an error message
-                #         article['content'] = 'Unable to parse page - See <a href="{}">here</a> for the original link'.format(url)
-                #     article = article['content']
-                #     article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
-                #
-                #     # html output section.
-                #     output = html_output_string(permalink, author, article, title)
-                #     if delete_files is False:
-                #         file_name = html_writer(path, name, output)
-                #
-                #     # Evernote section
-                #     if use_evernote is True:
-                #         enclient.new_note(title)
-                #         enclient.add_tag(*evernote_tags)
-                #         output = html_output_string(permalink, author, article, title)
-                #         enclient.add_html(output)
-                #
-                #         # Add html file to note
-                #         # enclient.add_resource("Downloads/{}.html".format(name))
-                #         note = enclient.create_note()
+                # ========== #
+                # IS ARTICLE #
+                # ========== #
+                elif hasattr(i, 'title') and i.is_self is False:
+                    logger.debug('{} is article/webpage'.format(name))
+                    url = i.url
+                    html = None
+                    try:
+                        with urllib.request.urlopen(url) as response:
+                            html = response.read()
+                    except OSError:
+                        self.logger.warn("Unable to access article url")
+                        break
+                    except urllib.error.HTTPError:
+                        self.logger.warn("Unable to access article url")
+                        break
+
+                    article = Document(html)
+                    article_text = article.summary()
+
+                    if article_text is None:  # if unable to parse document, manually set an error message
+                        article_text = 'Unable to parse page - See <a href="{}">here</a> for the original link'.format(
+                            url)
+                    # article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
+                    post = models.Post(permalink=permalink, title=title, body_content=article_text, date=date,
+                                       author_id=user.id, code=name, type='article')
+                    self.db.session.add(post)
+                    self.db.session.commit()
 
                 # end of checking for saved items #
-                # failed_upload = False
-                # if use_evernote is True:
-                #     if note is not None:
-                #         # print("Saved {:9} - GUID: {}".format(name, note.guid))
-                #         logger.info('Saved {:9} - GUID: {}'.format(name, note.guid))
-                #     else:  # Upload failed
-                #         # print("Saved {:9} - Note failed to upload".format(name))
-                #         logger.info('Saved {:9} - Note failed to upload'.format(name))
-                #         failed_upload = True
-                # elif use_evernote is False:
                 logger.info('Saved ' + name)
-                # if not debug_mode and not failed_upload:
-                #     ind.write(name + "\n")
-                #     ind.flush()  # this fixes python not writing the file if it terminates before .close() can be called
-                #     if delete_files is False:
-                #         html_index_file.add_link(title, file_name, permalink)
 
         # end of for loop
-        # ind.close()
         logger.info("All items downloaded")
         self.set_output_thread_condition(2)
-        # if delete_files is False:
-        #     html_index_file.save_and_close()
-        # else:  # try remove downloads if -t is set, but don't force it if directory has things in it already.
-        #     try:
-        #         os.rmdir('Downloads')
-        #     except OSError:
-        #         logger.error("Unable to remove files")
