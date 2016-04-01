@@ -105,7 +105,7 @@ class DownloadThread(Thread):
             raise SystemExit
 
         logger.info("Beginning to save files to db...")
-        for i in r.get_me().get_saved(limit=4):
+        for i in r.get_me().get_saved(limit=20):
             if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
                 logger.debug('Refreshing Reddit token')
                 r.refresh_access_information(access_information['refresh_token'])
@@ -166,6 +166,13 @@ class DownloadThread(Thread):
                     base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
                         -1]))  # filename for image. regex same as above.
                     filename = path + "/" + base_filename
+                    filetype = 'image'
+
+                    if url[-4:] == "gifv":
+                        url = url.replace('gifv', 'mp4')
+                        filename = filename.replace('gifv', 'mp4')
+                        base_filename = base_filename.replace('gifv', 'mp4')
+                        filetype = 'video'
 
                     # image downloader section
                     if os.path.exists(filename) and (os.path.getsize(filename) > 0):  # If image exists and is valid
@@ -183,6 +190,11 @@ class DownloadThread(Thread):
                         if filename.split('.')[-1] == 'pdf':
                             img = '<a href="static/SRDownloads/{}">Click here for link to downloaded pdf</a>'.format(
                                 base_filename)
+                        elif filename.split('.')[-1] == 'mp4':
+                            img = '<video class="sr-image img-responsive" id="share-video" autoplay="" muted=""' \
+                                  ' loop=""><source id="mp4Source" src="/img/{}" type=' \
+                                  '"video/mp4">Sorry,' \
+                                  ' your browser doesn\'t support HTML5 video.  </video>'.format(base_filename)
                         else:
                             img = '<a href="/img/{0}"><img class="sr-image img-responsive" src="/img/{0}">' \
                                   '</a>'.format(base_filename)
@@ -191,7 +203,7 @@ class DownloadThread(Thread):
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
-                                       author_id=user.id, code=name, type='image')
+                                       author_id=user.id, code=name, type=filetype)
                     self.db.session.add(post)
                     self.db.session.commit()
 
@@ -265,7 +277,11 @@ class DownloadThread(Thread):
 
                     for image in gallery:  # add if gallery > 10, then just add a link (would be too large for the note)
                         image_name = image.title if image.title is not None else ""
-                        image_description = image.description if image.description is not None else ""
+                        # image_description = image.description if image.description is not None else ""
+                        if image.description != title and image.description is not None:
+                            image_description = image.description
+                        else:
+                            image_description = ""
                         image_filetype = image.type.split('/')[1]
                         image_id = image.id
                         image_link = image.link
