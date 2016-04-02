@@ -105,16 +105,13 @@ class DownloadThread(Thread):
             raise SystemExit
 
         logger.info("Beginning to save files to db...")
-        for i in r.get_me().get_saved(limit=20):
+        for i in r.get_me().get_saved(limit=1):
             if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
                 logger.debug('Refreshing Reddit token')
                 r.refresh_access_information(access_information['refresh_token'])
                 time_since_accesstoken = time.time()
 
             name = i.name
-            file_name = name  # to stop ide complaining.
-            note = None
-            evernote_tags = ('Reddit', 'SavedRetriever', '/r/' + i.subreddit.display_name)  # add config for this later
 
             if name not in index:  # file has not been downloaded
                 permalink = i.permalink
@@ -128,6 +125,7 @@ class DownloadThread(Thread):
                     user = user.first()
                 title = i.link_title if hasattr(i, 'link_title') else i.title
                 date = datetime.datetime.fromtimestamp(i.created)
+                post = None
                 # ========== #
                 # IS COMMENT #
                 # ========== #
@@ -139,8 +137,6 @@ class DownloadThread(Thread):
                     body = self.subreddit_linker(body)
                     post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
                                        author_id=user.id, code=name, type='text')
-                    self.db.session.add(post)
-                    self.db.session.commit()
 
                 # ============ #
                 # IS SELF-POST #
@@ -153,8 +149,6 @@ class DownloadThread(Thread):
                     text = self.subreddit_linker(text)
                     post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
                                        author_id=user.id, code=name, type='text')
-                    self.db.session.add(post)
-                    self.db.session.commit()
 
                 # ====================== #
                 # IS DIRECT LINKED IMAGE #
@@ -204,8 +198,6 @@ class DownloadThread(Thread):
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
                                        author_id=user.id, code=name, type=filetype)
-                    self.db.session.add(post)
-                    self.db.session.commit()
 
                 # =============== #
                 # IS GFYCAT IMAGE #
@@ -244,8 +236,6 @@ class DownloadThread(Thread):
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
                                        author_id=user.id, code=name, type='video')
-                    self.db.session.add(post)
-                    self.db.session.commit()
 
                 # ============== #
                 # IS IMGUR ALBUM #
@@ -307,8 +297,6 @@ class DownloadThread(Thread):
                         body += img
                     post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
                                        author_id=user.id, code=name, type='album')
-                    self.db.session.add(post)
-                    self.db.session.commit()
 
                 # ========== #
                 # IS ARTICLE #
@@ -336,10 +324,10 @@ class DownloadThread(Thread):
                     # article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
                     post = models.Post(permalink=permalink, title=title, body_content=article_text, date=date,
                                        author_id=user.id, code=name, type='article')
-                    self.db.session.add(post)
-                    self.db.session.commit()
 
                 # end of checking for saved items #
+                self.db.session.add(post)
+                self.db.session.commit()
                 logger.info('Saved ' + name)
 
         # end of for loop
