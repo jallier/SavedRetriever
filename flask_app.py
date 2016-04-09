@@ -2,10 +2,10 @@ import logging
 from queue import Queue
 
 import praw
-from flask import Flask, render_template, request, flash, send_file
+from flask import Flask, render_template, request, send_file
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import desc
 
-# import download as DownloadClient
 from Resources.forms import SettingsForm
 
 app = Flask(__name__)
@@ -22,7 +22,16 @@ mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue
 
 @app.route("/")
 def main():
-    posts = db.session.query(models.Post)
+    # print(request.args.get('sort'))
+    sort = request.args.get('sort')
+    if sort == "desc":
+        posts = db.session.query(models.Post).order_by(desc(models.Post.id))
+    elif sort == "date":
+        posts = db.session.query(models.Post).order_by(models.Post.date)
+    elif sort == 'date_desc':
+        posts = db.session.query(models.Post).order_by(desc(models.Post.date))
+    else:
+        posts = db.session.query(models.Post)
     return render_template('index.html', posts=posts)
 
 
@@ -73,10 +82,9 @@ def run():
 def settings():
     form = SettingsForm()
     reddit_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
-    if not form.validate_on_submit():
-        flash("Please enter keys for required services")
-    return render_template('settings.html', form=form, reddit_token=reddit_token, readability_token=None,
-                           evernote_token=None)
+    # if not form.validate_on_submit():
+    #     flash("Please enter keys for required services")
+    return render_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None)
 
 
 @app.route("/reddit_wizard")
