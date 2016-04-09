@@ -8,6 +8,7 @@ class Post(db.Model):
     type = db.Column(db.String(10))
     title = db.Column(db.String(255))
     body_content = db.Column(db.Text)
+    summary = db.Column(db.Text)
     date = db.Column(db.DateTime)
     author_id = db.Column(db.Integer, db.ForeignKey('author.id'))
 

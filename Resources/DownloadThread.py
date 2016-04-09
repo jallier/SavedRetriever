@@ -5,6 +5,8 @@ import urllib.request
 import os
 import re
 import urllib.error
+
+import bleach
 import praw
 import imgurpython.helpers.error
 import time
@@ -22,6 +24,39 @@ class DownloadThread(Thread):
         self.logger = logger
         self.output_queue = output_queue
         self.output_queue.put(0)
+        self.allowed_tags = [
+            'a',
+            'b',
+            'br',
+            'em',
+            'h1',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
+            'img',
+            'title',
+            'p',
+            'strong',
+            'li',
+            'ol',
+            'ul',
+            'table',
+            'tr',
+            'td',
+            'blockquote',
+            'caption',
+            'strike',
+            'big',
+            'center',
+            'cite',
+            'code'
+        ]
+
+        self.allowed_attrs = {
+            '*': ['href', 'src']
+        }
 
     def run(self):
         self.downloader()
@@ -105,7 +140,7 @@ class DownloadThread(Thread):
             raise SystemExit
 
         logger.info("Beginning to save files to db...")
-        for i in r.get_me().get_saved(limit=1):
+        for i in r.get_me().get_saved(limit=20):
             if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
                 logger.debug('Refreshing Reddit token')
                 r.refresh_access_information(access_information['refresh_token'])
@@ -135,8 +170,10 @@ class DownloadThread(Thread):
 
                     # html output
                     body = self.subreddit_linker(body)
+                    summary = body[:600]
+                    summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
                     post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
-                                       author_id=user.id, code=name, type='text')
+                                       author_id=user.id, code=name, type='text', summary=summary)
 
                 # ============ #
                 # IS SELF-POST #
@@ -147,8 +184,10 @@ class DownloadThread(Thread):
 
                     # html output
                     text = self.subreddit_linker(text)
+                    summary = text[:600]
+                    summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
                     post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
-                                       author_id=user.id, code=name, type='text')
+                                       author_id=user.id, code=name, type='text', summary=summary)
 
                 # ====================== #
                 # IS DIRECT LINKED IMAGE #
@@ -166,6 +205,7 @@ class DownloadThread(Thread):
                         url = url.replace('gifv', 'mp4')
                         filename = filename.replace('gifv', 'mp4')
                         base_filename = base_filename.replace('gifv', 'mp4')
+                        base_filename = base_filename.replace('_image', '_video')
                         filetype = 'video'
 
                     # image downloader section
@@ -197,7 +237,7 @@ class DownloadThread(Thread):
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
-                                       author_id=user.id, code=name, type=filetype)
+                                       author_id=user.id, code=name, type=filetype, summary=img)
 
                 # =============== #
                 # IS GFYCAT IMAGE #
@@ -235,7 +275,7 @@ class DownloadThread(Thread):
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
-                                       author_id=user.id, code=name, type='video')
+                                       author_id=user.id, code=name, type='video', summary=img)
 
                 # ============== #
                 # IS IMGUR ALBUM #
@@ -243,7 +283,9 @@ class DownloadThread(Thread):
                 elif hasattr(i, 'url') and 'imgur' in i.url:  # Add option to download images to folder.
                     logger.debug('{} is Imgur album'.format(name))
                     url = i.url
-                    body = "<h2>{}</h2>".format(title)
+                    # body = "<h2>{}</h2>".format(title)
+                    body = ''
+                    summary = ''
 
                     # imgur api section
                     client = ImgurClient('755357eb4cd70bd', None)
@@ -257,7 +299,7 @@ class DownloadThread(Thread):
                     except imgurpython.helpers.error.ImgurClientError:  # if 'gallery' is actually just a lone image
                         try:
                             gallery = [client.get_image(gallery_id)]
-                        except imgurpython.helpers.error.ImgurClientError as error:  # if gallery does not exist. Is this the best way to do this?
+                        except imgurpython.helpers.error.ImgurClientError as error:  # if gallery does not exist.
                             if error.status_code != 404:
                                 logger.error("**{} - {}**".format(error.status_code, error.error_message))
                             else:
@@ -265,6 +307,7 @@ class DownloadThread(Thread):
 
                     img_path = path
 
+                    first_image = True
                     for image in gallery:  # add if gallery > 10, then just add a link (would be too large for the note)
                         image_name = image.title if image.title is not None else ""
                         # image_description = image.description if image.description is not None else ""
@@ -294,9 +337,15 @@ class DownloadThread(Thread):
                             self.db.session.add(image)
                             self.db.session.commit()
 
+                        if first_image:
+                            summary = '<a href="/img/{0}"><img src="/img/{0}"' \
+                                      ' class="sr-image img-responsive"></a>'.format(base_filename)
+                            first_image = False
+
                         body += img
-                    post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
-                                       author_id=user.id, code=name, type='album')
+
+                    post = models.Post(permalink=permalink, title=title + " - Album", body_content=body, date=date,
+                                       author_id=user.id, code=name, type='album', summary=summary)
 
                 # ========== #
                 # IS ARTICLE #
@@ -317,18 +366,22 @@ class DownloadThread(Thread):
 
                     article = Document(html)
                     article_text = article.summary()
+                    article_text = bleach.clean(article_text, tags=self.allowed_tags, attributes=self.allowed_attrs,
+                                                strip=True)
+                    summary = article_text[:600]
+                    article_text = '<a href="{}">Original article</a>'.format(url) + article_text
 
                     if article_text is None:  # if unable to parse document, manually set an error message
                         article_text = 'Unable to parse page - See <a href="{}">here</a> for the original link'.format(
                             url)
                     # article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
                     post = models.Post(permalink=permalink, title=title, body_content=article_text, date=date,
-                                       author_id=user.id, code=name, type='article')
+                                       author_id=user.id, code=name, type='article', summary=summary)
 
                 # end of checking for saved items #
                 self.db.session.add(post)
                 self.db.session.commit()
-                logger.info('Saved ' + name)
+                logger.info('Saved ' + name + ' - ' + title[:255])
 
         # end of for loop
         logger.info("All items downloaded")
