@@ -30,7 +30,12 @@ def main():
 def show_image(filename):
     # image = db.session.query(models.Images)
     image = models.Images.query.filter_by(file_name=filename).first().file_path
-    return send_file(image)
+    mime = image.split('.')[-1]
+    if mime == 'mp4':
+        mime = 'video/' + mime
+    else:
+        mime = 'image/' + mime
+    return send_file(image, mimetype=mime)
 
 
 @app.route('/post/<postid>')
