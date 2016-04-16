@@ -29,6 +29,11 @@
             });
         });
 
+        $(document).ready(function() {
+            $("#delete_all_posts").click(function(){
+                $.post('/delete_all_posts').done()
+            });
+        });
     </script>
     <style>
         .panel-heading{
@@ -81,8 +86,12 @@
                         Sort by: <a href="/">Downloaded</a> - <a href="/?sort=desc">Downloaded desc</a> - <a href="/?sort=date">Date posted</a> - <a href="/?sort=date_desc">Date posted desc</a>
                     </div>
                     <div>
-                        <a href="javascript:void(0)" id="run_downloader" class="btn btn-raised btn-info">
+                        <a id="run_downloader" class="btn btn-raised btn-info">
                             Refresh Posts
+                            <div class="ripple-container"></div>
+                        </a>
+                        <a id="delete_all_posts" class="btn btn-raised btn-info">
+                            Delete all posts
                             <div class="ripple-container"></div>
                         </a>
                     </div>
@@ -114,11 +123,6 @@
 $(function() {
   $.material.init();
 });
-
-
-
-
-
 </script>
 
 </body>

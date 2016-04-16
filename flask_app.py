@@ -78,6 +78,17 @@ def run():
     return ('', 204)  # empty http response
 
 
+@app.route('/delete_all_posts', methods=['POST'])
+def delete_all_posts():
+    try:
+        db.session.query(models.Post).delete()
+        db.session.query(models.Images).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+    return '', 204
+
+
 @app.route("/settings", methods=['GET', 'POST'])
 def settings():
     form = SettingsForm()
