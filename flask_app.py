@@ -62,6 +62,13 @@ def show_post(postid):
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post)
 
 
+@app.route('/cancel', methods=['POST'])
+def cancel():
+    global mythread
+    mythread.join()
+    return '', 204
+
+
 @app.route('/run', methods=['GET', 'POST'])
 def run():
     global mythread, thread_status, thread_status_queue

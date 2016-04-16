@@ -28,10 +28,14 @@
                 $.post('/run').done()
             });
         });
-
         $(document).ready(function() {
             $("#delete_all_posts").click(function(){
                 $.post('/delete_all_posts').done()
+            });
+        });
+        $(document).ready(function() {
+            $("#cancel").click(function(){
+                $.post('/cancel').done()
             });
         });
     </script>
@@ -88,6 +92,10 @@
                     <div>
                         <a id="run_downloader" class="btn btn-raised btn-info">
                             Refresh Posts
+                            <div class="ripple-container"></div>
+                        </a>
+                        <a id="cancel" class="btn btn-raised btn-info">
+                            Cancel Download
                             <div class="ripple-container"></div>
                         </a>
                         <a id="delete_all_posts" class="btn btn-raised btn-info">

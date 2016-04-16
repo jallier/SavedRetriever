@@ -1,17 +1,18 @@
 import datetime
 import json
-import warnings
-import urllib.request
 import os
 import re
+import threading
+import time
 import urllib.error
+import urllib.request
+import warnings
+from threading import Thread
 
 import bleach
-import praw
 import imgurpython.helpers.error
-import time
+import praw
 from imgurpython import ImgurClient
-from threading import Thread
 from readability.readability import Document
 
 from Resources import models
@@ -24,6 +25,7 @@ class DownloadThread(Thread):
         self.logger = logger
         self.output_queue = output_queue
         self.output_queue.put(0)
+        self.stop_request = threading.Event()
         self.allowed_tags = [
             'a',
             'b',
@@ -101,8 +103,13 @@ class DownloadThread(Thread):
         self.output_queue.get(False)
         self.output_queue.put(condition)
 
+    def join(self, timeout=None):
+        self.stop_request.set()
+        super(DownloadThread, self).join(timeout)
+
     def downloader(self):
         self.set_output_thread_condition(1)
+        self.stop_request.clear()
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
         logger = self.logger
 
@@ -140,7 +147,12 @@ class DownloadThread(Thread):
             raise SystemExit
 
         logger.info("Beginning to save files to db...")
-        for i in r.get_me().get_saved(limit=20):
+        for i in r.get_me().get_saved(limit=4):
+            if self.stop_request.is_set():
+                logger.info('Cancelling download...')
+                # super(DownloadThread, self).join(None)
+                break
+
             if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
                 logger.debug('Refreshing Reddit token')
                 r.refresh_access_information(access_information['refresh_token'])
