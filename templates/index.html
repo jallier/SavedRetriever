@@ -20,12 +20,28 @@
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/ripples.min.js')}}"></script>
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
 
+    <!-- Bootstrap Material Snackbar -->
+    <link href="{{url_for('static', filename='bootstrap-material/dist/css/snackbar.min.css')}}" rel=stylesheet type="text/css">
+    <script src="{{url_for('static', filename='bootstrap-material/dist/js/snackbar.min.js')}}"></script>
+
     <title>SavedRetriever</title>
 
     <script>
+        function getStatus(){
+            $.getJSON('/status', function(data){
+                if(data.status == 'running'){
+                    $.snackbar({content: data.count + " posts downloaded"});
+                    setTimeout(getStatus, 2000);
+                } else if(data.status == 'finished'){
+                    $.snackbar({content: "Downloads finished. Downloaded " + data.count + " posts"});
+                }
+            });
+        }
         $(document).ready(function() {
             $("#run_downloader").click(function(){
                 $.post('/run').done()
+                getStatus();
+                alert("test");
             });
         });
         $(document).ready(function() {
@@ -36,6 +52,11 @@
         $(document).ready(function() {
             $("#cancel").click(function(){
                 $.post('/cancel').done()
+            });
+        });
+        $(document).ready(function() {
+            $("#test").click(function(){
+                getStatus();
             });
         });
     </script>
@@ -90,7 +111,7 @@
                         Sort by: <a href="/">Downloaded</a> - <a href="/?sort=desc">Downloaded desc</a> - <a href="/?sort=date">Date posted</a> - <a href="/?sort=date_desc">Date posted desc</a>
                     </div>
                     <div>
-                        <a id="run_downloader" class="btn btn-raised btn-info">
+                        <a id="run_downloader" class="btn btn-raised btn-info" data-toggle=snackbar data-content="Starting downloads...">
                             Refresh Posts
                             <div class="ripple-container"></div>
                         </a>
@@ -102,6 +123,7 @@
                             Delete all posts
                             <div class="ripple-container"></div>
                         </a>
+                        <span id="test">Click me</span>
                     </div>
                 </div>
             </div>

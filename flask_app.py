@@ -1,8 +1,9 @@
+import json
 import logging
 from queue import Queue
 
 import praw
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 
@@ -62,6 +63,32 @@ def show_post(postid):
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post)
 
 
+@app.route('/status')
+def thread_status():
+    global mythread, thread_status, thread_status_queue
+    thread_status = thread_status_queue.get()
+    thread_status_queue.put(thread_status)
+    if thread_status == 1:
+        count = mythread.get_number_items_downloaded()
+        response = {
+            'count': count,
+            'status': 'running'
+        }
+    elif thread_status == 2:
+        count = mythread.get_number_items_downloaded()
+        response = {
+            'count': count,
+            'status': 'finished'
+        }
+    else:
+        response = {
+            'count': 0,
+            'status': 'ready'
+        }
+    print(json.dumps(response))
+    return jsonify(response)
+
+
 @app.route('/cancel', methods=['POST'])
 def cancel():
     global mythread
@@ -76,7 +103,7 @@ def run():
     thread_status_queue.put(thread_status)
     if thread_status == 0:  # Thread is stopped
         mythread.start()
-    elif thread_status == 1:
+    elif thread_status == 1:  # Thread is running
         pass
     elif thread_status == 2:  # Thread has run once; instantiate a new one
         mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)

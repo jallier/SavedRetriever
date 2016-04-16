@@ -26,6 +26,7 @@ class DownloadThread(Thread):
         self.output_queue = output_queue
         self.output_queue.put(0)
         self.stop_request = threading.Event()
+        self.count = 0
         self.allowed_tags = [
             'a',
             'b',
@@ -107,6 +108,9 @@ class DownloadThread(Thread):
         self.stop_request.set()
         super(DownloadThread, self).join(timeout)
 
+    def get_number_items_downloaded(self):
+        return self.count
+
     def downloader(self):
         self.set_output_thread_condition(1)
         self.stop_request.clear()
@@ -135,6 +139,7 @@ class DownloadThread(Thread):
             logger.info("Authenticated")
         except Exception as e:
             logger.error(e)
+            self.set_output_thread_condition(2)
             raise SystemExit
         time_since_accesstoken = time.time()
 
@@ -147,7 +152,9 @@ class DownloadThread(Thread):
             raise SystemExit
 
         logger.info("Beginning to save files to db...")
-        for i in r.get_me().get_saved(limit=4):
+        items = r.get_me().get_saved(limit=4)
+        self.count = 0
+        for i in items:
             if self.stop_request.is_set():
                 logger.info('Cancelling download...')
                 # super(DownloadThread, self).join(None)
@@ -393,6 +400,7 @@ class DownloadThread(Thread):
                 # end of checking for saved items #
                 self.db.session.add(post)
                 self.db.session.commit()
+                self.count += 1
                 logger.info('Saved ' + name + ' - ' + title[:255])
 
         # end of for loop
