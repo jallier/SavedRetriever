@@ -63,6 +63,13 @@ def show_post(postid):
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post)
 
 
+@app.route('/user/<username>')
+def user(username):
+    username = models.Author.query.filter_by(username=username).first()
+    posts = models.Post.query.filter_by(author=username)
+    return render_template('user.html', user=username, posts=posts)
+
+
 @app.route('/status')
 def thread_status():
     global mythread
