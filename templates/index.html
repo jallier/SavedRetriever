@@ -34,6 +34,8 @@
                     setTimeout(getStatus, 2000);
                 } else if(data.status == 'finished'){
                     $.snackbar({content: "Downloads finished. Downloaded " + data.count + " posts"});
+                } else {
+                    setTimeout(getStatus, 2000);
                 }
             });
         }
@@ -41,7 +43,7 @@
             $("#run_downloader").click(function(){
                 $.post('/run').done()
                 getStatus();
-                alert("test");
+                // alert("test");
             });
         });
         $(document).ready(function() {

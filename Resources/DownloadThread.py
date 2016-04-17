@@ -7,6 +7,7 @@ import time
 import urllib.error
 import urllib.request
 import warnings
+from queue import Empty
 from threading import Thread
 
 import bleach
@@ -24,7 +25,6 @@ class DownloadThread(Thread):
         self.db = db
         self.logger = logger
         self.output_queue = output_queue
-        self.output_queue.put(0)
         self.stop_request = threading.Event()
         self.count = 0
         self.allowed_tags = [
@@ -60,6 +60,11 @@ class DownloadThread(Thread):
         self.allowed_attrs = {
             '*': ['href', 'src']
         }
+        try:
+            self.output_queue.get(timeout=0.1)
+            self.output_queue.put(0)
+        except Empty:
+            self.output_queue.put(0)
 
     def run(self):
         self.downloader()

@@ -65,16 +65,15 @@ def show_post(postid):
 
 @app.route('/status')
 def thread_status():
-    global mythread, thread_status, thread_status_queue
-    thread_status = thread_status_queue.get()
-    thread_status_queue.put(thread_status)
-    if thread_status == 1:
+    global mythread
+    thread_state = get_thread_state()
+    if thread_state == 1:
         count = mythread.get_number_items_downloaded()
         response = {
             'count': count,
             'status': 'running'
         }
-    elif thread_status == 2:
+    elif thread_state == 2:
         count = mythread.get_number_items_downloaded()
         response = {
             'count': count,
@@ -85,8 +84,22 @@ def thread_status():
             'count': 0,
             'status': 'ready'
         }
+        set_thread_status(0)
     print(json.dumps(response))
     return jsonify(response)
+
+
+def get_thread_state():
+    global thread_status_queue
+    thread_state = thread_status_queue.get()
+    thread_status_queue.put(thread_state)
+    return thread_state
+
+
+def set_thread_status(status):
+    global thread_status_queue
+    thread_status_queue.get()
+    thread_status_queue.put(status)
 
 
 @app.route('/cancel', methods=['POST'])
@@ -98,18 +111,18 @@ def cancel():
 
 @app.route('/run', methods=['GET', 'POST'])
 def run():
-    global mythread, thread_status, thread_status_queue
-    thread_status = thread_status_queue.get()
-    thread_status_queue.put(thread_status)
-    if thread_status == 0:  # Thread is stopped
-        mythread.start()
-    elif thread_status == 1:  # Thread is running
-        pass
-    elif thread_status == 2:  # Thread has run once; instantiate a new one
-        mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)
-        mythread.start()
+    global mythread
+    if not mythread.is_alive():
+        try:
+            mythread.start()
+        except RuntimeError as e:
+            if e.args[0] == "threads can only be started once":  # Thread has already run; start a new one
+                mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)
+                mythread.start()
+            else:
+                print(e)
 
-    return ('', 204)  # empty http response
+    return '', 204  # empty http response
 
 
 @app.route('/delete_all_posts', methods=['POST'])
