@@ -31,12 +31,24 @@ $(document).ready(function() {
 });
 $(document).ready(function() {
     $("#delete_all_posts").click(function(){
-        $.post('/delete_all_posts').done()
+        if (confirm("Are you sure you want to delete all posts from the database? If you have unsaved them on reddit, you will be unable to redownload")){
+            $.getJSON('/delete_all_posts', function(data){
+                if(data.status == 'success'){
+                    $.snackbar({content: "All posts deleted"});
+                } else {
+                    $.snackbar({content: "Error deleting posts"});
+                }
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }
     });
 });
 $(document).ready(function() {
     $("#cancel").click(function(){
-        $.post('/cancel').done()
+        $.post('/cancel').done();
+        $.snackbar({content:"Cancelling download..."});
     });
 });
 $(document).ready(function() {

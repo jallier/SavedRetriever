@@ -125,15 +125,18 @@ def run():
     return '', 204  # empty http response
 
 
-@app.route('/delete_all_posts', methods=['POST'])
+@app.route('/delete_all_posts', methods=['POST', 'GET'])
 def delete_all_posts():
+    response = {}
     try:
         db.session.query(models.Post).delete()
         db.session.query(models.Images).delete()
         db.session.commit()
+        response["status"] = "success"
     except:
         db.session.rollback()
-    return '', 204
+        response["status"] = "fail"
+    return jsonify(response)
 
 
 @app.route("/settings", methods=['GET', 'POST'])
