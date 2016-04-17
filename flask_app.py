@@ -23,23 +23,28 @@ mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue
 
 @app.route("/")
 def main():
-    # print(request.args.get('sort'))
+    page = request.args.get('page')
     sort = request.args.get('sort')
-    if sort == "desc":
-        posts = db.session.query(models.Post).order_by(desc(models.Post.id))
-    elif sort == "date":
-        posts = db.session.query(models.Post).order_by(models.Post.date)
-    elif sort == 'date_desc':
-        posts = db.session.query(models.Post).order_by(desc(models.Post.date))
+    if page is not None and page is not 'None':
+        page = int(page)
     else:
-        posts = db.session.query(models.Post)
+        page = 1
+    posts = models.Post.query
+    if sort == "desc":
+        posts = posts.order_by(desc(models.Post.id))
+    elif sort == "date":
+        posts = posts.order_by(models.Post.date)
+    elif sort == 'date_desc':
+        posts = posts.order_by(desc(models.Post.date))
+    posts = posts.paginate(page, 20, False)
     return render_template('index.html', posts=posts)
 
 
 @app.route('/img/<filename>')
 def show_image(filename):
     # image = db.session.query(models.Images)
-    image = models.Images.query.filter_by(file_name=filename).first().file_path
+    # image = models.Images.query.filter_by(file_name=filename).first().file_path
+    image = db.session.query(models.Images).filter_by(file_name=filename).first().file_path
     mime = image.split('.')[-1]
     if mime == 'mp4':
         mime = 'video/' + mime

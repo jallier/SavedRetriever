@@ -74,7 +74,10 @@
                             Refresh Page
                             <div class="ripple-container"></div>
                         </a>
-                        Sort by: <a href="/">Downloaded</a> - <a href="/?sort=desc">Downloaded desc</a> - <a href="/?sort=date">Date posted</a> - <a href="/?sort=date_desc">Date posted desc</a>
+                        Sort by: <a href="/">Downloaded</a> -
+                        <a href="/?sort=desc">Downloaded desc</a> -
+                        <a href="/?sort=date">Date posted</a> -
+                        <a href="/?sort=date_desc">Date posted desc</a>
                     </div>
                     <div>
                         <a id="run_downloader" class="btn btn-raised btn-info">
@@ -97,8 +100,7 @@
     </div>
 
     <div class="row">
-
-        {% for post in posts %}
+        {% for post in posts.items %}
         <div class="col-md-3">
             <div class="bs-component">
                 <div class="panel panel-default">
@@ -110,7 +112,22 @@
             </div>
         </div>
         {% endfor %}
-
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="paginate text-center">
+                {% if posts.has_prev %}
+                <a href="/?page={{ posts.prev_num }}&sort={{ request.args.get('sort') }}">&lt;&lt; Prev posts</a>
+                {% else %}
+                &lt;&lt; Prev posts
+                {% endif %} |
+                {% if posts.has_next %}
+                <a href="/?page={{ posts.next_num }}&sort={{ request.args.get('sort') }}">Next posts &gt;&gt;</a>
+                {% else %}
+                Next posts &gt;&gt;
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
