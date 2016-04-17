@@ -344,7 +344,7 @@ class DownloadThread(Thread):
                         image_link = image.link
                         # sets up downloaded filename and html for embedding image
                         base_filename = "{}_image.{}".format(image_id, image_filetype)
-                        img = '<div class="col-md-3"><h3>{0}</h3><a href="/img/{1}"><img src="/img/{1}"' \
+                        img = '<div class="col-md-12"><h3>{0}</h3><a href="/img/{1}"><img src="/img/{1}"' \
                               ' class="sr-image img-responsive"></a><br/>{2}</div>'.format(image_name, base_filename,
                                                                                            image_description)
                         filename = img_path + "/" + base_filename
