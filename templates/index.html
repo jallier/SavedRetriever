@@ -27,13 +27,25 @@
     <title>SavedRetriever</title>
 
     <script>
+        var bar = "";
+        var id = "";
+        $(document).ready(function() {
+            bar = $.snackbar({content:"", timeout:0});
+            id = $(bar).attr('id');
+            $("#"+id).snackbar("hide");
+        });
+
         function getStatus(){
             $.getJSON('/status', function(data){
                 if(data.status == 'running'){
-                    $.snackbar({content: data.count + " posts downloaded"});
+                    $(bar).attr('data-content', data.count + " posts downloaded");
+                    $("#"+id).snackbar("show");
                     setTimeout(getStatus, 2000);
                 } else if(data.status == 'finished'){
-                    $.snackbar({content: "Downloads finished. Downloaded " + data.count + " posts"});
+                    $(bar).attr('data-content', "Downloads finished. Downloaded " + data.count + " posts");
+                    setTimeout(function(){
+                        location.reload();
+                    }, 2000);
                 } else {
                     setTimeout(getStatus, 2000);
                 }
@@ -42,8 +54,8 @@
         $(document).ready(function() {
             $("#run_downloader").click(function(){
                 $.post('/run').done()
+                $.snackbar({content: "Beginning download"});
                 getStatus();
-                // alert("test");
             });
         });
         $(document).ready(function() {
@@ -58,7 +70,8 @@
         });
         $(document).ready(function() {
             $("#test").click(function(){
-                getStatus();
+                $(bar).attr('data-content', 'working?');
+                $("#"+id).snackbar("show");
             });
         });
     </script>
@@ -113,7 +126,7 @@
                         Sort by: <a href="/">Downloaded</a> - <a href="/?sort=desc">Downloaded desc</a> - <a href="/?sort=date">Date posted</a> - <a href="/?sort=date_desc">Date posted desc</a>
                     </div>
                     <div>
-                        <a id="run_downloader" class="btn btn-raised btn-info" data-toggle=snackbar data-content="Starting downloads...">
+                        <a id="run_downloader" class="btn btn-raised btn-info">
                             Refresh Posts
                             <div class="ripple-container"></div>
                         </a>
