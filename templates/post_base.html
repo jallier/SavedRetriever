@@ -66,6 +66,45 @@
     </div>
 </div>
 {% block content %}{% endblock %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div>
+                    <h3>Top comments:</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div class="comments">
+                    {% for key, value in comments.items() %}
+                    <div class="panel panel-default comment">
+                        <div class="panel-body">
+                            <a class="username" href="http://www.reddit.com/u/{{ value['author'] }}" target="_blank">
+                                {{ value['author'] }}</a> | {{ value['points'] }} points
+                            {{ value['body']|safe }}
+                        </div>
+                        {% if value['child']|length > 0 %}
+                        <div class="panel comment-child" style="margin-left:30px;">
+                            <div class="panel-body">
+                                <a class="username" href="http://www.reddit.com/u/{{ value['child']['author'] }}"
+                                   target="_blank">
+                                    {{ value['child']['author'] }}</a> | {{ value['child']['points'] }} points
+                                {{ value['child']['body']|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!--Initialize the ripple effect-->
 <script type="text/javascript">

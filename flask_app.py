@@ -57,13 +57,13 @@ def show_image(filename):
 def show_post(postid):
     post = models.Post.query.filter_by(code=postid).first()
     if post.type == 'text':
-        return render_template('post_text.html', title=post.title[0:64] + '...', post=post)
+        return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
     elif post.type == 'image':
-        return render_template('post_image.html', title=post.title[0:64] + '...', post=post)
+        return render_template('post_album.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
     elif post.type == 'album':
-        return render_template('post_album.html', title=post.title[0:64] + '...', post=post)
+        return render_template('post_album.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
     elif post.type == 'video':
-        return render_template('post_image.html', title=post.title[0:64] + '...', post=post)
+        return render_template('post_album.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
     elif post.type == 'article':
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
 

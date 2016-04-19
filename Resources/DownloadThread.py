@@ -123,12 +123,14 @@ class DownloadThread(Thread):
             if count > 4:  # Number of comments to grab
                 break
             comment_id = 'comment_' + str(count)
-            my_json[comment_id] = {'body': comment.body_html, 'author': comment.author.name, 'points': comment.score,
-                                   'child': {}}
-            if len(comment.replies) != 0:
-                my_json[comment_id]['child'] = {'body': comment.replies[0].body_html,
-                                                'author': comment.replies[0].author.name,
-                                                'points': comment.replies[0].score}
+            my_json[comment_id] = {'points': comment.score, 'child': {}}
+            my_json[comment_id]['body'] = comment.body_html if comment.body_html is not None else 'deleted'
+            my_json[comment_id]['author'] = comment.author.name if comment.author is not None else 'deleted'
+
+            if len(comment.replies) != 0 and type(comment.replies[0]) is not praw.objects.MoreComments:
+                my_json[comment_id]['child'] = {'points': comment.replies[0].score}
+                my_json[comment_id]['child']['body'] = comment.replies[0].body_html if comment.replies[0].body_html is not None else ''
+                my_json[comment_id]['child']['author'] = comment.replies[0].author.name if comment.replies[0].author is not None else 'deleted'
             count += 1
         return json.dumps(my_json)
 
@@ -227,7 +229,8 @@ class DownloadThread(Thread):
                     summary = text[:600]
                     summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
                     post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
-                                       author_id=user.id, code=name, type='text', summary=summary)
+                                       author_id=user.id, code=name, type='text', summary=summary,
+                                       comments=self._get_comments(i))
 
                 # ====================== #
                 # IS DIRECT LINKED IMAGE #
@@ -277,7 +280,8 @@ class DownloadThread(Thread):
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
-                                       author_id=user.id, code=name, type=filetype, summary=img)
+                                       author_id=user.id, code=name, type=filetype, summary=img,
+                                       comments=self._get_comments(i))
 
                 # =============== #
                 # IS GFYCAT IMAGE #
@@ -315,7 +319,8 @@ class DownloadThread(Thread):
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
                     post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
-                                       author_id=user.id, code=name, type='video', summary=img)
+                                       author_id=user.id, code=name, type='video', summary=img,
+                                       comments=self._get_comments(i))
 
                 # ============== #
                 # IS IMGUR ALBUM #
@@ -385,7 +390,8 @@ class DownloadThread(Thread):
                         body += img
 
                     post = models.Post(permalink=permalink, title=title + " - Album", body_content=body, date=date,
-                                       author_id=user.id, code=name, type='album', summary=summary)
+                                       author_id=user.id, code=name, type='album', summary=summary,
+                                       comments=self._get_comments(i))
 
                 # ========== #
                 # IS ARTICLE #
