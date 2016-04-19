@@ -35,6 +35,39 @@
             </div>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div>
+                    <h3>Top comments:</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div class="comments">
+                    {% for key, value in comments.items() %}
+                    <div class="panel panel-default comment">
+                        <div class="panel-body">
+                            {{ value['body']|safe }}
+                        </div>
+                        {% if value['child']|length > 0 %}
+                        <div class="panel comment-child" style="margin-left:30px;">
+                            <div class="panel-body">
+                                {{ value['child']['body']|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

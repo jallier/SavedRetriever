@@ -65,7 +65,9 @@ def show_post(postid):
     elif post.type == 'video':
         return render_template('post_image.html', title=post.title[0:64] + '...', post=post)
     elif post.type == 'article':
-        return render_template('post_text.html', title=post.title[0:64] + '...', post=post)
+        for key, value in json.loads(post.comments).items():
+            print(len(value['child']))
+        return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
 
 
 @app.route('/user/<username>')
@@ -97,7 +99,7 @@ def thread_status():
             'status': 'ready'
         }
         set_thread_status(0)
-    print(json.dumps(response))
+    # print(json.dumps(response))
     return jsonify(response)
 
 

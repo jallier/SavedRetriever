@@ -116,6 +116,18 @@ class DownloadThread(Thread):
     def get_number_items_downloaded(self):
         return self.count
 
+    def _get_comments(self, submission):
+        my_json = {}
+        count = 0
+        for comment in submission.comments:
+            if count > 4:  # Number of comments to grab
+                break
+            my_json['comment_' + str(count)] = {'body': comment.body_html, 'child': {}}
+            if len(comment.replies) != 0:
+                my_json['comment_' + str(count)]['child'] = {'body': comment.replies[0].body_html}
+            count += 1
+        return json.dumps(my_json)
+
     def downloader(self):
         self.set_output_thread_condition(1)
         self.stop_request.clear()
@@ -399,8 +411,10 @@ class DownloadThread(Thread):
                         article_text = 'Unable to parse page - See <a href="{}">here</a> for the original link'.format(
                             url)
                     # article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
+
                     post = models.Post(permalink=permalink, title=title, body_content=article_text, date=date,
-                                       author_id=user.id, code=name, type='article', summary=summary)
+                                       author_id=user.id, code=name, type='article', summary=summary,
+                                       comments=self._get_comments(i))
 
                 # end of checking for saved items #
                 self.db.session.add(post)
