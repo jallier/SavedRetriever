@@ -65,8 +65,6 @@ def show_post(postid):
     elif post.type == 'video':
         return render_template('post_image.html', title=post.title[0:64] + '...', post=post)
     elif post.type == 'article':
-        for key, value in json.loads(post.comments).items():
-            print(len(value['child']))
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
 
 

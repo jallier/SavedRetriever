@@ -122,9 +122,13 @@ class DownloadThread(Thread):
         for comment in submission.comments:
             if count > 4:  # Number of comments to grab
                 break
-            my_json['comment_' + str(count)] = {'body': comment.body_html, 'child': {}}
+            comment_id = 'comment_' + str(count)
+            my_json[comment_id] = {'body': comment.body_html, 'author': comment.author.name, 'points': comment.score,
+                                   'child': {}}
             if len(comment.replies) != 0:
-                my_json['comment_' + str(count)]['child'] = {'body': comment.replies[0].body_html}
+                my_json[comment_id]['child'] = {'body': comment.replies[0].body_html,
+                                                'author': comment.replies[0].author.name,
+                                                'points': comment.replies[0].score}
             count += 1
         return json.dumps(my_json)
 

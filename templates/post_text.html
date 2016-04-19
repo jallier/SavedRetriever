@@ -53,11 +53,16 @@
                     {% for key, value in comments.items() %}
                     <div class="panel panel-default comment">
                         <div class="panel-body">
+                            <a class="username" href="http://www.reddit.com/u/{{ value['author'] }}" target="_blank">
+                                {{ value['author'] }}</a> - {{ value['points'] }} points
                             {{ value['body']|safe }}
                         </div>
                         {% if value['child']|length > 0 %}
                         <div class="panel comment-child" style="margin-left:30px;">
                             <div class="panel-body">
+                                <a class="username" href="http://www.reddit.com/u/{{ value['child']['author'] }}"
+                                   target="_blank">
+                                    {{ value['child']['author'] }}</a> - {{ value['child']['points'] }} points
                                 {{ value['child']['body']|safe }}
                             </div>
                         </div>
