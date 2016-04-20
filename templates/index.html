@@ -39,6 +39,25 @@
         .sr-image{
 
         }
+        @media screen and (max-width: 991px){
+            .icon{
+                position: absolute;
+                bottom: 5px;
+                right: 20px;
+                background-color: #eeeeee;
+            }
+        }
+         @media only screen and (min-width : 992px){
+            .icon{
+                position: relative;
+                bottom: 32px;
+                right: 3px;
+                background-color: #eeeeee;
+            }
+        }
+        .a-icon{
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -112,10 +131,13 @@
         <div class="col-md-3">
             <div class="bs-component">
                 <div class="panel panel-default">
-                    <div class="panel-heading"><a href="/post/{{ post.code }}">{{ post.title }}</a></div>
+                    <div class="panel-heading clearfix"><a href="/post/{{ post.code }}">{{ post.title }}</a></div>
                     <div class="panel-body">
                         {{ post.summary|safe }}
                     </div>
+                    <span class="icon pull-right label">
+                        <a class="a-icon"><i class="material-icons">delete</i></a>
+                    </span>
                 </div>
             </div>
         </div>
