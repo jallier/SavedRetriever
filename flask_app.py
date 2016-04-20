@@ -42,8 +42,6 @@ def main():
 
 @app.route('/img/<filename>')
 def show_image(filename):
-    # image = db.session.query(models.Images)
-    # image = models.Images.query.filter_by(file_name=filename).first().file_path
     image = db.session.query(models.Images).filter_by(file_name=filename).first().file_path
     mime = image.split('.')[-1]
     if mime == 'mp4':
@@ -58,11 +56,7 @@ def show_post(postid):
     post = models.Post.query.filter_by(code=postid).first()
     if post.type == 'text':
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
-    elif post.type == 'image':
-        return render_template('post_album.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
-    elif post.type == 'album':
-        return render_template('post_album.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
-    elif post.type == 'video':
+    elif post.type == 'image' or 'album' or 'video':
         return render_template('post_album.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
     elif post.type == 'article':
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))

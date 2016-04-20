@@ -15,6 +15,7 @@ import imgurpython.helpers.error
 import praw
 from imgurpython import ImgurClient
 from readability.readability import Document
+from sqlalchemy.exc import IntegrityError
 
 from Resources import models
 
@@ -133,6 +134,16 @@ class DownloadThread(Thread):
                 my_json[comment_id]['child']['author'] = comment.replies[0].author.name if comment.replies[0].author is not None else 'deleted'
             count += 1
         return json.dumps(my_json)
+
+    def _add_image_to_db(self, base_filename, filename):
+        try:
+            image = models.Images(file_name=base_filename, file_path=filename)
+            self.db.session.add(image)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            self.logger.warning(e)
+            self.logger.warning("Integrity error - Likely due to image already existing in the db")
 
     def downloader(self):
         self.set_output_thread_condition(1)
@@ -260,9 +271,7 @@ class DownloadThread(Thread):
 
                     if image_downloaded:
                         logger.info('Downloaded image - {}'.format(base_filename))
-                        image = models.Images(file_name=base_filename, file_path=filename)
-                        self.db.session.add(image)
-                        self.db.session.commit()
+                        self._add_image_to_db(base_filename, filename)
 
                         if filename.split('.')[-1] == 'pdf':
                             img = '<a href="static/SRDownloads/{}">Click here for link to downloaded pdf</a>'.format(
@@ -308,9 +317,7 @@ class DownloadThread(Thread):
 
                     if image_downloaded:
                         logger.info('Downloaded video - {}'.format(base_filename))
-                        image = models.Images(file_name=base_filename, file_path=filename)
-                        self.db.session.add(image)
-                        self.db.session.commit()
+                        self._add_image_to_db(base_filename, filename)
 
                         img = '<video class="sr-image img-responsive" id="share-video" autoplay="" muted="" loop="">' \
                               '<source id="mp4Source" src="/img/{}" type="video/mp4">Sorry, your browser doesn\'t support ' \
@@ -378,9 +385,7 @@ class DownloadThread(Thread):
 
                         if image_downloaded:
                             logger.info('Image downloaded - {}'.format(base_filename))
-                            image = models.Images(file_name=base_filename, file_path=filename)
-                            self.db.session.add(image)
-                            self.db.session.commit()
+                            self._add_image_to_db(base_filename, filename)
 
                         if first_image:
                             summary = '<a href="/img/{0}"><img src="/img/{0}"' \
