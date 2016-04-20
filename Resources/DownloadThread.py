@@ -145,6 +145,19 @@ class DownloadThread(Thread):
             self.logger.warning(e)
             self.logger.warning("Integrity error - Likely due to image already existing in the db")
 
+    def _make_article_img_responsive(self, text):
+        capture = '<img[\s\S]+?>'
+        sub = 'class=".*?"'
+        cap = re.findall(capture, text)
+        for i in cap:
+            orig = i
+            if re.search(sub, i) is None:
+                i = i.replace('>', 'class="img-responsive">')
+            else:
+                i = re.sub(sub, 'class="img-responsive', i)
+            text = re.sub(orig, i, text)
+        return text
+
     def downloader(self):
         self.set_output_thread_condition(1)
         self.stop_request.clear()
@@ -421,6 +434,7 @@ class DownloadThread(Thread):
                     article_text = bleach.clean(article_text, tags=self.allowed_tags, attributes=self.allowed_attrs,
                                                 strip=True)
                     summary = article_text[:600]
+                    article_text = self._make_article_img_responsive(article_text)
                     article_text = '<a href="{}">Original article</a>'.format(url) + article_text
 
                     if article_text is None:  # if unable to parse document, manually set an error message
