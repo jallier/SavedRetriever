@@ -284,11 +284,12 @@ class DownloadThread(Thread):
                         else:
                             img = '<a href="/img/{0}"><img class="sr-image img-responsive" src="/img/{0}">' \
                                   '</a>'.format(base_filename)
-
                     else:
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
-                    post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
+                    img_json = [{"name": "", "filename": base_filename, "description": ""}]
+                    img_json = json.dumps(img_json)
+                    post = models.Post(permalink=permalink, title=title, body_content=img_json, date=date,
                                        author_id=user.id, code=name, type=filetype, summary=img,
                                        comments=self._get_comments(i))
 
@@ -325,7 +326,9 @@ class DownloadThread(Thread):
                     else:
                         img = "Image failed to download - It may be temporarily or permanently unavailable"
 
-                    post = models.Post(permalink=permalink, title=title, body_content=img, date=date,
+                    img_json = [{"name": "", "filename": base_filename, "description": ""}]
+                    img_json = json.dumps(img_json)
+                    post = models.Post(permalink=permalink, title=title, body_content=img_json, date=date,
                                        author_id=user.id, code=name, type='video', summary=img,
                                        comments=self._get_comments(i))
 
@@ -336,7 +339,7 @@ class DownloadThread(Thread):
                     logger.debug('{} is Imgur album'.format(name))
                     url = i.url
                     # body = "<h2>{}</h2>".format(title)
-                    body = ''
+                    body = []
                     summary = ''
 
                     # imgur api section
@@ -372,9 +375,7 @@ class DownloadThread(Thread):
                         image_link = image.link
                         # sets up downloaded filename and html for embedding image
                         base_filename = "{}_image.{}".format(image_id, image_filetype)
-                        img = '<div class="col-md-12 col-xs-12"><h3>{0}</h3><a href="/img/{1}"><img src="/img/{1}"' \
-                              ' class="sr-image img-responsive"></a><br/>{2}</div>'.format(image_name, base_filename,
-                                                                                           image_description)
+                        img_json = [{"name": image_name, "filename": base_filename, "description": image_description}]
                         filename = img_path + "/" + base_filename
                         # only download if file doesn't already exist
                         if os.path.exists(filename) and (os.path.getsize(filename) > 0):
@@ -392,9 +393,9 @@ class DownloadThread(Thread):
                                       ' class="sr-image img-responsive"></a>'.format(base_filename)
                             first_image = False
 
-                        body += img
+                        body += img_json
 
-                    post = models.Post(permalink=permalink, title=title + " - Album", body_content=body, date=date,
+                    post = models.Post(permalink=permalink, title=title + " - Album", body_content=json.dumps(body), date=date,
                                        author_id=user.id, code=name, type='album', summary=summary,
                                        comments=self._get_comments(i))
 

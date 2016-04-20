@@ -28,7 +28,12 @@
         <div class="col-md-8">
             <div class="bs-component">
                 <div class="post-image">
-                    {{ post.body_content|safe }}
+                    {% for video in videos %}
+                    <video class="sr-image img-responsive" id="share-video" autoplay="" muted="" loop="">
+                        <source id="mp4Source" src="/img/{{ video['filename'] }}" type="video/mp4">
+                        Sorry, your browser doesn\'t support HTML5 video.
+                    </video>
+                    {% endfor %}
                 </div>
             </div>
         </div>

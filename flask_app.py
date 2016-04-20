@@ -56,8 +56,14 @@ def show_post(postid):
     post = models.Post.query.filter_by(code=postid).first()
     if post.type == 'text':
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
-    elif post.type == 'image' or 'album' or 'video':
-        return render_template('post_album.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
+    elif post.type == 'image' or post.type == 'album':
+        # images = json.loads(post.body_content)
+        return render_template('post_album.html', title=post.title[0:64] + '...', images=json.loads(post.body_content),
+                               post=post, comments=json.loads(post.comments))
+    elif post.type == 'video':
+        # images = json.loads(post.body_content)
+        return render_template('post_video.html', title=post.title[0:64] + '...', videos=json.loads(post.body_content), post=post,
+                               comments=json.loads(post.comments))
     elif post.type == 'article':
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
 

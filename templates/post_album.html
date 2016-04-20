@@ -27,7 +27,16 @@
     <div class="row">
             <div class="bs-component">
                 <div class="post-image sr-image">
-                    {{ post.body_content|safe }}
+                    {% for image in images %}
+                    <div class="col-md-12 col-xs-12">
+                        <h3>{{ image['title'] }}</h3>
+                        <!--<a href="/img/{1}"><img src="/img/{1}" class="sr-image img-responsive"></a><br/>{2}-->
+                        <a href="/img/{{ image['filename'] }}">
+                            <img class="sr-image img-responsive" src="/img/{{ image['filename'] }}">
+                        </a>
+                        {{ image['description'] }}
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
     </div>
