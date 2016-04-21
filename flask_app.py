@@ -6,6 +6,7 @@ import praw
 from flask import Flask, render_template, request, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
 
 from Resources.forms import SettingsForm
 
@@ -66,6 +67,20 @@ def show_post(postid):
                                comments=json.loads(post.comments))
     elif post.type == 'article':
         return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
+
+
+@app.route('/delete_post')
+def delete_post():
+    code = request.args.get('post')
+    return_json = {}
+    try:
+        db.session.query(models.Post).filter_by(code=code).delete()
+        db.session.commit()
+        return_json["success"] = True
+    except IntegrityError:
+        db.session.rollback()
+        return_json["success"] = False
+    return jsonify(return_json)
 
 
 @app.route('/user/<username>')

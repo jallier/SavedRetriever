@@ -22,6 +22,17 @@ function getStatus(){
         }
     });
 }
+function deletePost(post){
+    var data = {"post":post}
+    $.getJSON('/delete_post', data, function(data){
+        if(data.success == true){
+            $.snackbar({"content":"Post deleted"});
+            $("#"+post).remove();
+        } else {
+            $.snackbar({"content":"Error deleting post"});
+        }
+    });
+}
 $(document).ready(function() {
     $("#run_downloader").click(function(){
         $.post('/run').done()
@@ -53,7 +64,16 @@ $(document).ready(function() {
 });
 $(document).ready(function() {
     $("#test").click(function(){
-        $(bar).attr('data-content', 'working?');
-        $("#"+id).snackbar("show");
+        $("#delete_post").modal("show");
+    });
+});
+
+$(document).ready(function() {
+    $(".a-icon").click(function(){
+        var post_code = $(this).data("post");
+        $("#delete_post").modal("show");
+        $("#delete_post_confirm").click(function(){
+            deletePost(post_code);
+        });
     });
 });
