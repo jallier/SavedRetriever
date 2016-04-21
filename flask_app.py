@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from queue import Queue
 
 import praw
@@ -56,35 +57,44 @@ def show_image(filename):
 def show_post(postid):
     post = models.Post.query.filter_by(code=postid).first()
     if post.type == 'text':
-        return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
+        return render_template('post_text.html', title=post.title[0:64] + '...', post=post,
+                               comments=json.loads(post.comments))
     elif post.type == 'image' or post.type == 'album':
         # images = json.loads(post.body_content)
         return render_template('post_album.html', title=post.title[0:64] + '...', images=json.loads(post.body_content),
                                post=post, comments=json.loads(post.comments))
     elif post.type == 'video':
         # images = json.loads(post.body_content)
-        return render_template('post_video.html', title=post.title[0:64] + '...', videos=json.loads(post.body_content), post=post,
+        return render_template('post_video.html', title=post.title[0:64] + '...', videos=json.loads(post.body_content),
+                               post=post,
                                comments=json.loads(post.comments))
     elif post.type == 'article':
-        return render_template('post_text.html', title=post.title[0:64] + '...', post=post, comments=json.loads(post.comments))
+        return render_template('post_text.html', title=post.title[0:64] + '...', post=post,
+                               comments=json.loads(post.comments))
 
 
 @app.route('/delete_post')
 def delete_post():
     code = request.args.get('post')
     return_json = {}
-    # try:
-    #     db.session.query(models.Post).filter_by(code=code).delete()
-    #     db.session.commit()
-    #     return_json["success"] = True
-    # except IntegrityError:
-    #     db.session.rollback()
-    #     return_json["success"] = False
+    post = db.session.query(models.Post).filter_by(code=code)
+    to_delete = post.first()
+    if to_delete.type == 'album' or to_delete.type == 'image' or to_delete.type == 'video':
+        images = json.loads(to_delete.body_content)
+        for image in images:
+            db_image = db.session.query(models.Images).filter_by(file_name=image['filename'])
+            os.remove(db_image.first().file_path)
+            db_image.delete()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            print("Error removing image from database")  # Change to logger object when that gets integrated
+            db.session.rollback()
     try:
-        db.session.query(models.Post).filter_by(code=code).delete()
-        post = models.Post(permalink=None, title=None, body_content=None, date=None, author_id=None, code=code,
-                           type=None, summary=None)
-        db.session.add(post)
+        post.delete()
+        new_post = models.Post(permalink=None, title=None, body_content=None, date=None, author_id=None, code=code,
+                               type=None, summary=None)
+        db.session.add(new_post)
         db.session.commit()
         return_json["success"] = True
     except IntegrityError:
