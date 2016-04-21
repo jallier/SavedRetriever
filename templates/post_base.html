@@ -54,11 +54,20 @@
             color: rgb(51, 102, 153);
             font-weight:bold;
         }
+        @media screen and (max-width: 991px){
+        /** Less than Large screens */
         .sr-image{
-            max-height: 750px;
-            max-width: 750px;
-            margin: 0 auto;
+            }
         }
+        @media only screen and (min-width : 992px){
+        /** Large screens */
+            .sr-image{
+                max-height: 750px;
+                max-width: 750px;
+                margin: 0 auto;
+            }
+        }
+
     </style>
 </head>
 <body>
