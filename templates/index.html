@@ -128,7 +128,7 @@
             </div>
         </div>
     </div>
-
+    <!-- Delete individual post modal -->
     <div class="modal" id="delete_post">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -148,9 +148,11 @@
             </div>
         </div>
     </div>
+    <!-- end modal -->
 
     <div class="row">
         {% for post in posts.items %}
+        {% if post.permalink is not none %}
         <div class="col-md-3" id="{{ post.code }}">
             <div class="bs-component">
                 <div class="panel panel-default">
@@ -164,6 +166,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         {% endfor %}
     </div>
     <div class="row">

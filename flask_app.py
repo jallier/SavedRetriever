@@ -73,8 +73,18 @@ def show_post(postid):
 def delete_post():
     code = request.args.get('post')
     return_json = {}
+    # try:
+    #     db.session.query(models.Post).filter_by(code=code).delete()
+    #     db.session.commit()
+    #     return_json["success"] = True
+    # except IntegrityError:
+    #     db.session.rollback()
+    #     return_json["success"] = False
     try:
         db.session.query(models.Post).filter_by(code=code).delete()
+        post = models.Post(permalink=None, title=None, body_content=None, date=None, author_id=None, code=code,
+                           type=None, summary=None)
+        db.session.add(post)
         db.session.commit()
         return_json["success"] = True
     except IntegrityError:
