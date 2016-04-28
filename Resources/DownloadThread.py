@@ -435,6 +435,7 @@ class DownloadThread(Thread):
                     article_text = bleach.clean(article_text, tags=self.allowed_tags, attributes=self.allowed_attrs,
                                                 strip=True)
                     summary = article_text[:600]
+                    summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
                     article_text = self._make_article_img_responsive(article_text)
                     article_text = '<a href="{}">Original article</a>'.format(url) + article_text
 
