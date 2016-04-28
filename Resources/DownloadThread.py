@@ -408,8 +408,8 @@ class DownloadThread(Thread):
 
                         body += img_json
 
-                    post = models.Post(permalink=permalink, title=title + " - Album", body_content=json.dumps(body), date=date,
-                                       author_id=user.id, code=name, type='album', summary=summary,
+                    post = models.Post(permalink=permalink, title=title + " - Album", body_content=json.dumps(body),
+                                       date=date, author_id=user.id, code=name, type='album', summary=summary,
                                        comments=self._get_comments(i))
 
                 # ========== #
@@ -420,7 +420,11 @@ class DownloadThread(Thread):
                     url = i.url
                     html = None
                     try:
-                        with urllib.request.urlopen(url) as response:
+                        # Set header to trick some sites into letting the script pull the article
+                        header = {'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) '
+                                                'Gecko/2009021910 Firefox/3.0.7'}
+                        request = urllib.request.Request(url, headers=header)
+                        with urllib.request.urlopen(request) as response:
                             html = response.read()
                     except urllib.error.HTTPError as e:
                         self.logger.warning("Unable to access article url\n %s\n %s\n %s", e, url, i.name)
