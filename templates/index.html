@@ -28,40 +28,7 @@
     <title>SavedRetriever</title>
 
     <script src="{{url_for('static', filename='ajax.js')}}"></script>
-    <style>
-        .panel-heading{
-            height:50px;
-            overflow: hidden;
-        }
-        .panel-body{
-            height:200px;
-            overflow: hidden;
-        }
-        .sr-image{
-
-        }
-        @media screen and (max-width: 991px){
-            /** Less than Large screens */
-            .icon{
-                position: absolute;
-                bottom: 5px;
-                right: 20px;
-                background-color: #eeeeee;
-            }
-        }
-         @media only screen and (min-width : 992px){
-            /** Large screens */
-            .icon{
-                position: relative;
-                bottom: 32px;
-                right: 3px;
-                background-color: #eeeeee;
-            }
-        }
-        .a-icon{
-            color: black;
-        }
-    </style>
+    <link href="{{url_for('static', filename='index.css')}}" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <nav class="navbar navbar-default">

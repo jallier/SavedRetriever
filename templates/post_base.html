@@ -19,56 +19,13 @@
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/ripples.min.js')}}"></script>
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
 
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='post.css')}}">
+
     {% if title %}
     <title>{{ title }}</title>
     {% else %}
     <title>SavedRetriever</title>
     {% endif %}
-    <style>
-        /* Fix for viewport being too wide below smallest breakpoint */
-        @media (max-width: 767px) {
-            body > .container-fluid { overflow: hidden; } /* fix */
-            body > .container { overflow: hidden; } /* fix */
-            body > .container-fluid > * { overflow: visible; } /* reset back to normal */
-            body > .container > * { overflow: visible; } /* reset back to normal */
-        }
-
-        body{
-            word-wrap: break-word;
-        }
-        .info{
-            word-wrap: break-word;
-        }
-        .post-content{
-            font-weight: 400;
-        }
-        .comment{
-            border-left: 4px solid;
-            border-left-color: #BDBDBD;
-        }
-        .comment-child{
-            border-left: 4px solid;
-            border-left-color: #757575;
-        }
-        .username{
-            color: rgb(51, 102, 153);
-            font-weight:bold;
-        }
-        @media screen and (max-width: 991px){
-        /** Less than Large screens */
-        .sr-image{
-            }
-        }
-        @media only screen and (min-width : 992px){
-        /** Large screens */
-            .sr-image{
-                max-height: 750px;
-                max-width: 750px;
-                margin: 0 auto;
-            }
-        }
-
-    </style>
 </head>
 <body>
 <nav class="navbar navbar-default">
