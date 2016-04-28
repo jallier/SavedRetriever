@@ -6,35 +6,34 @@
     body > .container > * { overflow: visible; } /* reset back to normal */
 }
 
-body{
+body {
     word-wrap: break-word;
 }
-.info{
+.info {
     word-wrap: break-word;
 }
-.post-content{
+.post-content {
     font-weight: 400;
 }
-.comment{
+.comment {
     border-left: 4px solid;
     border-left-color: #BDBDBD;
 }
-.comment-child{
+.comment-child {
     border-left: 4px solid;
     border-left-color: #757575;
 }
-.username{
+.username {
     color: rgb(51, 102, 153);
-    font-weight:bold;
+    font-weight: bold;
 }
-@media screen and (max-width: 991px){
-/** Less than Large screens */
-.sr-image{
-    }
+@media screen and (max-width: 991px) {
+    /** Less than Large screens */
+    .sr-image {}
 }
-@media only screen and (min-width : 992px){
-/** Large screens */
-    .sr-image{
+@media only screen and (min-width: 992px) {
+    /** Large screens */
+    .sr-image {
         max-height: 750px;
         max-width: 750px;
         margin: 0 auto;
