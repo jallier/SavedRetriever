@@ -41,6 +41,7 @@ class Settings(db.Model):
      setting_type is int, where
      0 = String
      1 = boolean
+     2 = Integer
     """
     id = db.Column(db.Integer, primary_key=True)
     setting_name = db.Column(db.String(32), unique=True)

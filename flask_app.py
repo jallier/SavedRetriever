@@ -4,7 +4,7 @@ import os
 from queue import Queue
 
 import praw
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, send_file, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
@@ -182,7 +182,7 @@ def delete_all_posts():
         db.session.query(models.Images).delete()
         db.session.commit()
         response["status"] = "success"
-    except:
+    except IntegrityError:
         db.session.rollback()
         response["status"] = "fail"
     return jsonify(response)
@@ -192,9 +192,35 @@ def delete_all_posts():
 def settings():
     form = SettingsForm()
     reddit_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
+    num_of_comments = db.session.query(models.Settings).filter_by(setting_name='number_of_comments').first()
+    save_comments = db.session.query(models.Settings).filter_by(setting_name='save_comments').first()
+    if form.validate_on_submit():
+        print(form.save_comments.data)
+        if num_of_comments is not None:
+            num_of_comments.setting_value = form.number_of_comments.data
+        else:
+            num_of_comments = models.Settings(setting_name="number_of_comments",
+                                              setting_value=form.number_of_comments.data,
+                                              setting_type=2)
+            db.session.add(num_of_comments)
+        if save_comments is not None:
+            save_comments.setting_value = str(form.save_comments.data)
+        else:
+            save_comments = models.Settings(setting_name="save_comments",
+                                            setting_value=str(form.save_comments.data),
+                                            setting_type=1)
+            db.session.add(save_comments)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+
+        return redirect('/settings')
+
     # if not form.validate_on_submit():
     #     flash("Please enter keys for required services")
-    return render_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None)
+    return render_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
+                           num_of_comments=num_of_comments, save_comments=save_comments)
 
 
 @app.route("/reddit_wizard")
