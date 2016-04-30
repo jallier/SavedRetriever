@@ -77,10 +77,9 @@ def show_post(postid):
 def delete_post():
     code = request.args.get('post')
     return_json = {}
-    post = db.session.query(models.Post).filter_by(code=code)
-    to_delete = post.first()
-    if to_delete.type == 'album' or to_delete.type == 'image' or to_delete.type == 'video':
-        images = json.loads(to_delete.body_content)
+    post = db.session.query(models.Post).filter_by(code=code).first()
+    if post.type == 'album' or post.type == 'image' or post.type == 'video':
+        images = json.loads(post.body_content)
         for image in images:
             db_image = db.session.query(models.Images).filter_by(file_name=image['filename'])
             os.remove(db_image.first().file_path)
@@ -91,10 +90,13 @@ def delete_post():
             print("Error removing image from database")  # Change to logger object when that gets integrated
             db.session.rollback()
     try:
-        post.delete()
-        new_post = models.Post(permalink=None, title=None, body_content=None, date=None, author_id=None, code=code,
-                               type=None, summary=None)
-        db.session.add(new_post)
+        post.permalink = None
+        post.title = None
+        post.body_content = None
+        post.date = None
+        post.author_id = None
+        post.type = None
+        post.summary = None
         db.session.commit()
         return_json["success"] = True
     except IntegrityError:
