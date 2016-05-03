@@ -117,11 +117,11 @@ class DownloadThread(Thread):
     def get_number_items_downloaded(self):
         return self.count
 
-    def _get_comments(self, submission):
+    def _get_comments(self, submission, number_of_comments):
         my_json = {}
         count = 0
         for comment in submission.comments:
-            if count > 4:  # Number of comments to grab
+            if count > int(number_of_comments) - 1:  # Number of comments to grab
                 break
             comment_id = 'comment_' + str(count)
             my_json[comment_id] = {'points': comment.score, 'child': {}}
@@ -169,6 +169,7 @@ class DownloadThread(Thread):
         logger.debug("Getting settings from db")
         settings = self.db.session.query(models.Settings)
         get_comments = settings.filter_by(setting_name="save_comments").first().setting_value
+        number_of_comments = settings.filter_by(setting_name="number_of_comments").first().setting_value
 
         path = "static/SRDownloads"
         if not os.path.exists(path):
@@ -229,7 +230,7 @@ class DownloadThread(Thread):
                     self.db.session.commit()
                 else:
                     user = user.first()
-                comments = self._get_comments(i) if get_comments == 'True' else "{}"
+                comments = self._get_comments(i, number_of_comments) if get_comments == 'True' else "{}"
                 # ========== #
                 # IS COMMENT #
                 # ========== #
