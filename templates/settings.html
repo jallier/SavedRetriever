@@ -88,8 +88,11 @@
                         <span class="material-input"></span>
                         <div class="checkbox">
                             <label>
-
-                                {{ form.save_comments(default="fuckyouwork") }}
+                                {% if save_comments.setting_value == "True" %}
+                                    {{ form.save_comments(checked=save_comments.setting_value) }}
+                                {% else %}
+                                    {{ form.save_comments() }}
+                                {% endif %}
                                 Get post comments
                             </label>
                         </div>

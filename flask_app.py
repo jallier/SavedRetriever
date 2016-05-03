@@ -195,7 +195,6 @@ def settings():
     num_of_comments = db.session.query(models.Settings).filter_by(setting_name='number_of_comments').first()
     save_comments = db.session.query(models.Settings).filter_by(setting_name='save_comments').first()
     if form.validate_on_submit():
-        print(form.save_comments.data)
         if num_of_comments is not None:
             num_of_comments.setting_value = form.number_of_comments.data
         else:
