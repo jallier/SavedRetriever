@@ -38,7 +38,9 @@ def main():
         posts = posts.order_by(models.Post.date)
     elif sort == 'date_desc':
         posts = posts.order_by(desc(models.Post.date))
-    posts = posts.paginate(page, 20, False)
+
+    posts_per_page = int(db.session.query(models.Settings).filter_by(setting_name="number_of_posts").first().setting_value)
+    posts = posts.paginate(page, posts_per_page, False)
     return render_template('index.html', posts=posts)
 
 
