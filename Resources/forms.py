@@ -9,3 +9,4 @@ class SettingsForm(Form):
     upload_to_evernote = BooleanField('upload_to_evernote', default=False)
     number_of_comments = IntegerField('number_of_comments', default=5)
     save_comments = BooleanField('save_comments', default=False)
+    number_of_posts = IntegerField("number_of_posts", default=20)

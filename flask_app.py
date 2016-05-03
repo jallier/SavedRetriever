@@ -194,6 +194,7 @@ def settings():
     reddit_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
     num_of_comments = db.session.query(models.Settings).filter_by(setting_name='number_of_comments').first()
     save_comments = db.session.query(models.Settings).filter_by(setting_name='save_comments').first()
+    num_of_posts = db.session.query(models.Settings).filter_by(setting_name='number_of_posts').first()
     if form.validate_on_submit():
         if num_of_comments is not None:
             num_of_comments.setting_value = form.number_of_comments.data
@@ -209,6 +210,13 @@ def settings():
                                             setting_value=str(form.save_comments.data),
                                             setting_type=1)
             db.session.add(save_comments)
+        if num_of_posts is not None:
+            num_of_posts.setting_value = str(form.number_of_posts.data)
+        else:
+            num_of_posts = models.Settings(setting_name="number_of_posts",
+                                           setting_value=form.number_of_posts.data,
+                                           setting_type=2)
+            db.session.add(num_of_posts)
         try:
             db.session.commit()
         except IntegrityError:
@@ -219,7 +227,7 @@ def settings():
     # if not form.validate_on_submit():
     #     flash("Please enter keys for required services")
     return render_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
-                           num_of_comments=num_of_comments, save_comments=save_comments)
+                           num_of_comments=num_of_comments, save_comments=save_comments, num_of_posts=num_of_posts)
 
 
 @app.route("/reddit_wizard")
