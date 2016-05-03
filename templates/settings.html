@@ -105,7 +105,8 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        Color of main page
+                        <label>Select color of navbar</label>
+                        {{ form.color(class_="form-control") }}
                     </div>
                     <div class="form-group is-empty {% if num_of_posts.setting_value is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label" for="number_of_posts">Number of post items to show on main page</label>

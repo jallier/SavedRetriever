@@ -195,6 +195,7 @@ def settings():
     num_of_comments = db.session.query(models.Settings).filter_by(setting_name='number_of_comments').first()
     save_comments = db.session.query(models.Settings).filter_by(setting_name='save_comments').first()
     num_of_posts = db.session.query(models.Settings).filter_by(setting_name='number_of_posts').first()
+    color = db.session.query(models.Settings).filter_by(setting_name='color').first()
     if form.validate_on_submit():
         if num_of_comments is not None:
             num_of_comments.setting_value = form.number_of_comments.data
@@ -217,6 +218,13 @@ def settings():
                                            setting_value=form.number_of_posts.data,
                                            setting_type=2)
             db.session.add(num_of_posts)
+        if color is not None:
+            color.setting_value = str(form.color.data)
+        else:
+            color = models.Settings(setting_name="color",
+                                    setting_value=form.color.data,
+                                    setting_type=0)
+            db.session.add(color)
         try:
             db.session.commit()
         except IntegrityError:
@@ -226,6 +234,7 @@ def settings():
 
     # if not form.validate_on_submit():
     #     flash("Please enter keys for required services")
+    form.color.data = color.setting_value
     return render_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
                            num_of_comments=num_of_comments, save_comments=save_comments, num_of_posts=num_of_posts)
 
