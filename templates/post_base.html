@@ -52,6 +52,7 @@
     </div><!-- /.container-fluid -->
 </nav>
 {% block content %}{% endblock %}
+{% if comments.items()|length > 0 %}
 <div class="container">
     <div class="row">
         <div class="col-md-12 col-xs-12">
@@ -67,7 +68,7 @@
         <div class="col-md-12 col-xs-12">
             <div class="bs-component">
                 <div class="comments">
-                    {% if comments.items()|length > 0 %}
+
                     {% for key, value in comments.items() %}
                     <div class="panel panel-default comment">
                         <div class="panel-body">
@@ -87,18 +88,12 @@
                         {% endif %}
                     </div>
                     {% endfor %}
-                    {% else %}
-                    <div class="panel panel-default comment">
-                        <div class="panel-body">
-                            <h4>No comments available</h4>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
 
 <!--Initialize the ripple effect-->
 <script type="text/javascript">

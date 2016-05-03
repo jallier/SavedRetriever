@@ -15,7 +15,7 @@ import imgurpython.helpers.error
 import praw
 from imgurpython import ImgurClient
 from readability.readability import Document
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InterfaceError
 
 from Resources import models
 
@@ -166,8 +166,11 @@ class DownloadThread(Thread):
 
         logger.info("\n###########\nStarting SR\n###########")
 
-        path = "static/SRDownloads"
+        logger.debug("Getting settings from db")
+        settings = self.db.session.query(models.Settings)
+        get_comments = settings.filter_by(setting_name="save_comments").first().setting_value
 
+        path = "static/SRDownloads"
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -204,7 +207,6 @@ class DownloadThread(Thread):
         for i in items:
             if self.stop_request.is_set():
                 logger.info('Cancelling download...')
-                # super(DownloadThread, self).join(None)
                 break
 
             if (time.time() - time_since_accesstoken) / 60 > 55:  # Refresh the access token before it runs out.
@@ -216,6 +218,9 @@ class DownloadThread(Thread):
 
             if name not in index:  # file has not been downloaded
                 permalink = i.permalink
+                title = i.link_title if hasattr(i, 'link_title') else i.title
+                date = datetime.datetime.fromtimestamp(i.created)
+                post = None
                 author = str(i.author)
                 user = models.Author.query.filter_by(username=author)
                 if user.count() == 0:  # user is not in db
@@ -224,9 +229,7 @@ class DownloadThread(Thread):
                     self.db.session.commit()
                 else:
                     user = user.first()
-                title = i.link_title if hasattr(i, 'link_title') else i.title
-                date = datetime.datetime.fromtimestamp(i.created)
-                post = None
+                comments = self._get_comments(i) if get_comments == 'True' else "{}"
                 # ========== #
                 # IS COMMENT #
                 # ========== #
@@ -239,7 +242,7 @@ class DownloadThread(Thread):
                     summary = body[:600]
                     summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
                     post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
-                                       author_id=user.id, code=name, type='text', summary=summary)
+                                       author_id=user.id, code=name, type='text', summary=summary, comments=comments)
 
                 # ============ #
                 # IS SELF-POST #
@@ -254,7 +257,7 @@ class DownloadThread(Thread):
                     summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
                     post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
                                        author_id=user.id, code=name, type='text', summary=summary,
-                                       comments=self._get_comments(i))
+                                       comments=comments)
 
                 # ====================== #
                 # IS DIRECT LINKED IMAGE #
@@ -304,7 +307,7 @@ class DownloadThread(Thread):
                     img_json = json.dumps(img_json)
                     post = models.Post(permalink=permalink, title=title, body_content=img_json, date=date,
                                        author_id=user.id, code=name, type=filetype, summary=img,
-                                       comments=self._get_comments(i))
+                                       comments=comments)
 
                 # =============== #
                 # IS GFYCAT IMAGE #
@@ -343,7 +346,7 @@ class DownloadThread(Thread):
                     img_json = json.dumps(img_json)
                     post = models.Post(permalink=permalink, title=title, body_content=img_json, date=date,
                                        author_id=user.id, code=name, type='video', summary=img,
-                                       comments=self._get_comments(i))
+                                       comments=comments)
 
                 # ============== #
                 # IS IMGUR ALBUM #
@@ -410,7 +413,7 @@ class DownloadThread(Thread):
 
                     post = models.Post(permalink=permalink, title=title + " - Album", body_content=json.dumps(body),
                                        date=date, author_id=user.id, code=name, type='album', summary=summary,
-                                       comments=self._get_comments(i))
+                                       comments=comments)
 
                 # ========== #
                 # IS ARTICLE #
@@ -446,11 +449,16 @@ class DownloadThread(Thread):
 
                     post = models.Post(permalink=permalink, title=title, body_content=article_text, date=date,
                                        author_id=user.id, code=name, type='article', summary=summary,
-                                       comments=self._get_comments(i))
+                                       comments=comments)
 
                 # end of checking for saved items #
-                self.db.session.add(post)
-                self.db.session.commit()
+                try:
+                    self.db.session.add(post)
+                    self.db.session.commit()
+                except InterfaceError:
+                    self.db.session.rollback()
+                    self.logger.error("Error adding post to db - {}".format(post.title))
+                    continue
                 self.count += 1
                 logger.info('Saved ' + name + ' - ' + title[:255])
 
