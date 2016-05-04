@@ -22,9 +22,13 @@ from Resources.DownloadThread import DownloadThread
 thread_status_queue = Queue()
 mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)
 
+nav_color = "blue"
+
 
 @app.route("/")
 def main():
+    global nav_color
+    nav_color = models.Settings.query.filter_by(setting_name='color').first().setting_value
     page = request.args.get('page')
     sort = request.args.get('sort')
     if page is not None and page is not 'None':
@@ -41,7 +45,7 @@ def main():
 
     posts_per_page = int(db.session.query(models.Settings).filter_by(setting_name="number_of_posts").first().setting_value)
     posts = posts.paginate(page, posts_per_page, False)
-    return render_template('index.html', posts=posts)
+    return render_color_template('index.html', posts=posts)
 
 
 @app.route('/img/<filename>')
@@ -59,20 +63,22 @@ def show_image(filename):
 def show_post(postid):
     post = models.Post.query.filter_by(code=postid).first()
     if post.type == 'text':
-        return render_template('post_text.html', title=post.title[0:64] + '...', post=post,
-                               comments=json.loads(post.comments))
+        return render_color_template('post_text.html', title=post.title[0:64] + '...', post=post,
+                                     comments=json.loads(post.comments))
     elif post.type == 'image' or post.type == 'album':
         # images = json.loads(post.body_content)
-        return render_template('post_album.html', title=post.title[0:64] + '...', images=json.loads(post.body_content),
-                               post=post, comments=json.loads(post.comments))
+        return render_color_template('post_album.html', title=post.title[0:64] + '...',
+                                     images=json.loads(post.body_content),
+                                     post=post, comments=json.loads(post.comments))
     elif post.type == 'video':
         # images = json.loads(post.body_content)
-        return render_template('post_video.html', title=post.title[0:64] + '...', videos=json.loads(post.body_content),
-                               post=post,
-                               comments=json.loads(post.comments))
+        return render_color_template('post_video.html', title=post.title[0:64] + '...',
+                                     videos=json.loads(post.body_content),
+                                     post=post,
+                                     comments=json.loads(post.comments))
     elif post.type == 'article':
-        return render_template('post_text.html', title=post.title[0:64] + '...', post=post,
-                               comments=json.loads(post.comments))
+        return render_color_template('post_text.html', title=post.title[0:64] + '...', post=post,
+                                     comments=json.loads(post.comments))
 
 
 @app.route('/delete_post')
@@ -111,7 +117,7 @@ def delete_post():
 def user(username):
     username = models.Author.query.filter_by(username=username).first()
     posts = models.Post.query.filter_by(author=username)
-    return render_template('user.html', user=username, posts=posts)
+    return render_color_template('user.html', user=username, posts=posts)
 
 
 @app.route('/status')
@@ -223,6 +229,8 @@ def settings():
             db.session.add(num_of_posts)
         if color is not None:
             color.setting_value = str(form.color.data)
+            global nav_color
+            nav_color = color.setting_value
         else:
             color = models.Settings(setting_name="color",
                                     setting_value=form.color.data,
@@ -238,8 +246,8 @@ def settings():
     # if not form.validate_on_submit():
     #     flash("Please enter keys for required services")
     form.color.data = color.setting_value
-    return render_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
-                           num_of_comments=num_of_comments, save_comments=save_comments, num_of_posts=num_of_posts)
+    return render_color_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
+                                 num_of_comments=num_of_comments, save_comments=save_comments, num_of_posts=num_of_posts)
 
 
 @app.route("/reddit_wizard")
@@ -252,9 +260,9 @@ def reddit_wizard():
     duration = 'permanent'
     refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
     if refresh_token is not None: refresh_token = refresh_token.setting_value
-    return render_template('reddit_wizard.html', client_id=client_id, response_type=response_type, state=state,
-                           redirect_uri=redirect_uri, scope=scope, duration=duration,
-                           refresh_token=refresh_token)
+    return render_color_template('reddit_wizard.html', client_id=client_id, response_type=response_type, state=state,
+                                 redirect_uri=redirect_uri, scope=scope, duration=duration,
+                                 refresh_token=refresh_token)
 
 
 @app.route("/authorize_callback")
@@ -272,6 +280,11 @@ def authorize_callback():
     db.session.commit()
 
     return reddit_wizard()
+
+
+def render_color_template(template, **kwargs):
+    global nav_color
+    return render_template(template, color=nav_color, **kwargs)
 
 
 @app.route('/test')

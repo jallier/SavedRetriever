@@ -21,6 +21,20 @@
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/ripples.min.js')}}"></script>
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
 
+    {% if color == 'blue' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/blue.css')}}">
+    {% elif color == 'red' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/red.css')}}">
+    {% elif color == 'purple' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/purple.css')}}">
+    {% elif color == 'yellow' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/yellow.css')}}">
+    {% endif %}
+
     <title>SavedRetriever Settings</title>
 </head>
 <body>

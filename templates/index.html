@@ -25,6 +25,20 @@
     <link href="{{url_for('static', filename='bootstrap-material/dist/css/snackbar.min.css')}}" rel=stylesheet type="text/css">
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/snackbar.min.js')}}"></script>
 
+    {% if color == 'blue' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/blue.css')}}">
+    {% elif color == 'red' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/red.css')}}">
+    {% elif color == 'purple' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/purple.css')}}">
+    {% elif color == 'yellow' %}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='colored-navbar/yellow.css')}}">
+    {% endif %}
+
     <title>SavedRetriever</title>
 
     <script src="{{url_for('static', filename='ajax.js')}}"></script>
