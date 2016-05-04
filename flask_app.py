@@ -193,11 +193,12 @@ def delete_all_posts():
 @app.route("/settings", methods=['GET', 'POST'])
 def settings():
     form = SettingsForm()
-    reddit_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
-    num_of_comments = db.session.query(models.Settings).filter_by(setting_name='number_of_comments').first()
-    save_comments = db.session.query(models.Settings).filter_by(setting_name='save_comments').first()
-    num_of_posts = db.session.query(models.Settings).filter_by(setting_name='number_of_posts').first()
-    color = db.session.query(models.Settings).filter_by(setting_name='color').first()
+    db_settings = db.session.query(models.Settings)
+    reddit_token = db_settings.filter_by(setting_name='reddit_refresh_token').first()
+    num_of_comments = db_settings.filter_by(setting_name='number_of_comments').first()
+    save_comments = db_settings.filter_by(setting_name='save_comments').first()
+    num_of_posts = db_settings.filter_by(setting_name='number_of_posts').first()
+    color = db_settings.filter_by(setting_name='color').first()
     if form.validate_on_submit():
         if num_of_comments is not None:
             num_of_comments.setting_value = form.number_of_comments.data
