@@ -118,6 +118,9 @@ class DownloadThread(Thread):
         return self.count
 
     def _get_comments(self, submission, number_of_comments):
+        if hasattr(submission, 'body_html'):
+            # Temp fix for praw not returning comments of saved comments
+            return "{}"
         my_json = {}
         count = 0
         for comment in submission.comments:
