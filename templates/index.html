@@ -152,18 +152,24 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div class="paginate text-center">
+            <ul class="pager">
                 {% if posts.has_prev %}
-                <a href="/?page={{ posts.prev_num }}&sort={{ request.args.get('sort') }}">&lt;&lt; Prev posts</a>
+                <li>
+                <a href="/?page={{ posts.prev_num }}&sort={{ request.args.get('sort') }}" class="withripple">&lt;&lt; Prev posts</a>
                 {% else %}
-                &lt;&lt; Prev posts
-                {% endif %} |
-                {% if posts.has_next %}
-                <a href="/?page={{ posts.next_num }}&sort={{ request.args.get('sort') }}">Next posts &gt;&gt;</a>
-                {% else %}
-                Next posts &gt;&gt;
+                <li class="disabled">
+                <a href="#" class="withripple">&lt;&lt; Prev posts</a>
                 {% endif %}
-            </div>
+                </li>
+                {% if posts.has_next %}
+                <li>
+                <a href="/?page={{ posts.next_num }}&sort={{ request.args.get('sort') }}" class="withripple">Next posts &gt;&gt;</a>
+                {% else %}
+                <li class="disabled">
+                <a href="#" class="withripple">Next posts &gt;&gt;</a>
+                {% endif %}
+                </li>
+            </ul>
         </div>
     </div>
 </div>
