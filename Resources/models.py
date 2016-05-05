@@ -1,3 +1,5 @@
+import datetime
+
 from flask_app import db
 
 
@@ -10,8 +12,13 @@ class Post(db.Model):
     body_content = db.Column(db.Text)
     summary = db.Column(db.Text)
     comments = db.Column(db.Text)
-    date = db.Column(db.DateTime)
+    date_posted = db.Column(db.DateTime)
+    date_downloaded = db.Column(db.DateTime)
     author_id = db.Column(db.Integer, db.ForeignKey('author.id'))
+
+    def __init__(self, **kwargs):
+        super(Post, self).__init__(**kwargs)
+        self.date_downloaded = datetime.datetime.utcnow()
 
     def __repr__(self):
         return '<Post %s>' % self.permalink

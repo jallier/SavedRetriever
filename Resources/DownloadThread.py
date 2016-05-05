@@ -205,7 +205,9 @@ class DownloadThread(Thread):
         logger.info("Beginning to save files to db...")
         items = r.get_me().get_saved(limit=4)
         self.count = 0
-        for i in items:
+        # Convert saved post generator to a list in order to iterate backwards, so that the most recent saved post
+        # is the most recently downloaded
+        for i in list(items)[::-1]:
             if self.stop_request.is_set():
                 logger.info('Cancelling download...')
                 break
@@ -242,7 +244,7 @@ class DownloadThread(Thread):
                     body = self.subreddit_linker(body)
                     summary = body[:600]
                     summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
-                    post = models.Post(permalink=permalink, title=title, body_content=body, date=date,
+                    post = models.Post(permalink=permalink, title=title, body_content=body, date_posted=date,
                                        author_id=user.id, code=name, type='text', summary=summary, comments=comments)
 
                 # ============ #
@@ -256,7 +258,7 @@ class DownloadThread(Thread):
                     text = self.subreddit_linker(text)
                     summary = text[:600]
                     summary = bleach.clean(summary, tags=self.allowed_tags, attributes=self.allowed_attrs, strip=True)
-                    post = models.Post(permalink=permalink, title=title, body_content=text, date=date,
+                    post = models.Post(permalink=permalink, title=title, body_content=text, date_posted=date,
                                        author_id=user.id, code=name, type='text', summary=summary,
                                        comments=comments)
 
@@ -306,7 +308,7 @@ class DownloadThread(Thread):
 
                     img_json = [{"name": "", "filename": base_filename, "description": ""}]
                     img_json = json.dumps(img_json)
-                    post = models.Post(permalink=permalink, title=title, body_content=img_json, date=date,
+                    post = models.Post(permalink=permalink, title=title, body_content=img_json, date_posted=date,
                                        author_id=user.id, code=name, type=filetype, summary=img,
                                        comments=comments)
 
@@ -345,7 +347,7 @@ class DownloadThread(Thread):
 
                     img_json = [{"name": "", "filename": base_filename, "description": ""}]
                     img_json = json.dumps(img_json)
-                    post = models.Post(permalink=permalink, title=title, body_content=img_json, date=date,
+                    post = models.Post(permalink=permalink, title=title, body_content=img_json, date_posted=date,
                                        author_id=user.id, code=name, type='video', summary=img,
                                        comments=comments)
 
@@ -413,7 +415,7 @@ class DownloadThread(Thread):
                         body += img_json
 
                     post = models.Post(permalink=permalink, title=title + " - Album", body_content=json.dumps(body),
-                                       date=date, author_id=user.id, code=name, type='album', summary=summary,
+                                       date_posted=date, author_id=user.id, code=name, type='album', summary=summary,
                                        comments=comments)
 
                 # ========== #
@@ -448,7 +450,7 @@ class DownloadThread(Thread):
                             url)
                     # article = "<a href='{}'>{}</a><br/>{}<br/>".format(url, title, article)  # source of article
 
-                    post = models.Post(permalink=permalink, title=title, body_content=article_text, date=date,
+                    post = models.Post(permalink=permalink, title=title, body_content=article_text, date_posted=date,
                                        author_id=user.id, code=name, type='article', summary=summary,
                                        comments=comments)
 

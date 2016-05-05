@@ -36,12 +36,14 @@ def main():
     else:
         page = 1
     posts = models.Post.query
-    if sort == "desc":
-        posts = posts.order_by(desc(models.Post.id))
-    elif sort == "date":
-        posts = posts.order_by(models.Post.date)
+    if sort == "date":
+        posts = posts.order_by(models.Post.date_posted)
     elif sort == 'date_desc':
-        posts = posts.order_by(desc(models.Post.date))
+        posts = posts.order_by(desc(models.Post.date_posted))
+    elif sort == "desc":
+        posts = posts.order_by(models.Post.date_downloaded)
+    else:
+        posts = posts.order_by(desc(models.Post.date_downloaded))
 
     posts_per_page = int(db.session.query(models.Settings).filter_by(setting_name="number_of_posts").first().setting_value)
     posts = posts.paginate(page, posts_per_page, False)
@@ -101,7 +103,7 @@ def delete_post():
         post.permalink = None
         post.title = None
         post.body_content = None
-        post.date = None
+        post.date_posted = None
         post.author_id = None
         post.type = None
         post.summary = None
