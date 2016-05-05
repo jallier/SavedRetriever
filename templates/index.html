@@ -152,24 +152,30 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <ul class="pager">
+            <center>
+                <ul class="pagination">
                 {% if posts.has_prev %}
-                <li>
-                <a href="/?page={{ posts.prev_num }}&sort={{ request.args.get('sort') }}" class="withripple">&lt;&lt; Prev posts</a>
+                    <li><a href="/?page={{ posts.prev_num }}&sort={{ request.args.get('sort') }}">«</a></li>
                 {% else %}
-                <li class="disabled">
-                <a href="#" class="withripple">&lt;&lt; Prev posts</a>
+                    <li class="disabled"><a>«</a></li>
                 {% endif %}
-                </li>
+
+                {% for page in range(1, posts.pages+1) %}
+                    {% if page == posts.page %}
+                    <li class="active"><a href="/?page={{ page }}&sort={{ request.args.get('sort') }}">{{ page }}</a>
+                    </li>
+                    {% else %}
+                    <li><a href="/?page={{ page }}&sort={{ request.args.get('sort') }}">{{ page }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
                 {% if posts.has_next %}
-                <li>
-                <a href="/?page={{ posts.next_num }}&sort={{ request.args.get('sort') }}" class="withripple">Next posts &gt;&gt;</a>
+                    <li><a href="/?page={{ posts.next_num }}&sort={{ request.args.get('sort') }}">»</a></li>
                 {% else %}
-                <li class="disabled">
-                <a href="#" class="withripple">Next posts &gt;&gt;</a>
+                    <li class="disabled"><a>»</a></li>
                 {% endif %}
-                </li>
             </ul>
+            </center>
         </div>
     </div>
 </div>
