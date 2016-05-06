@@ -117,13 +117,15 @@ class DownloadThread(Thread):
     def get_number_items_downloaded(self):
         return self.count
 
-    def _get_comments(self, submission, number_of_comments):
-        if hasattr(submission, 'body_html'):
-            # Temp fix for praw not returning comments of saved comments
-            return "{}"
+    def _get_comments(self, submission, number_of_comments, r):
+        if type(submission) == praw.objects.Comment:
+            submission = r.get_submission(submission.permalink)
+            comments = submission.comments[0].replies
+        else:
+            comments = submission.comments
         my_json = {}
         count = 0
-        for comment in submission.comments:
+        for comment in comments:
             if count > int(number_of_comments) - 1:  # Number of comments to grab
                 break
             comment_id = 'comment_' + str(count)
@@ -235,7 +237,7 @@ class DownloadThread(Thread):
                     self.db.session.commit()
                 else:
                     user = user.first()
-                comments = self._get_comments(i, number_of_comments) if get_comments == 'True' else "{}"
+                comments = self._get_comments(i, number_of_comments, r) if get_comments == 'True' else "{}"
                 # ========== #
                 # IS COMMENT #
                 # ========== #
