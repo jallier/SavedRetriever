@@ -128,9 +128,24 @@
                         {{ form.color(class_="form-control") }}
                         <!--http://work.smarchal.com/twbscolor/css/e74c3cc0392becf0f1ffbbbc0-->
                     </div>
+                    <div class="form-group form-inline">
+                        <label>Schedule</label>
+                        <br>
+                        <div class="form-group">
+                            <label for="schedule_hour">Hour: </label>
+                            {{ form.schedule_hour(class_="form-control", style="width:25px; direction:rtl;") }}
+                        </div>
+                        <div class="form-group">
+                            <label for="schedule_min">Minute: </label>
+                            {{ form.schedule_min(class_="form-control", style="width:25px; direction:rtl;") }}
+                        </div>
+                    </div>
                     <div>
                         <input type="submit" class="btn btn-raised btn-primary" value="SAVE">
                         <div class="ripple-container"></div>
+                    </div>
+                    <div>
+                        {{form.errors}}
                     </div>
                 </form>
             </div>

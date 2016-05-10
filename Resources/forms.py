@@ -12,3 +12,8 @@ class SettingsForm(Form):
     number_of_posts = IntegerField("number_of_posts", default=20)
     color = SelectField('color', choices=[("red", "Red"), ("blue", 'Blue'), ("purple", "Purple"), ("green", "Green"),
                                           ("yellow", "Yellow")])
+    # schedule_day = SelectField('schedule_day', choices=[("1", "Monday"), ("2", "Tuesday"), ("3", "Wednesday"),
+    #                                                     ("4", "Thursday"), ("5", "Friday"), ("6", "Saturday"),
+    #                                                     ("7", "Sunday")])
+    schedule_hour = SelectField('schedule_hour', choices=[(str(x), str(x))for x in range(0, 24)])
+    schedule_min = SelectField('schedule_min', choices=[(str(x), format(x, '02d'))for x in range(0, 60)])

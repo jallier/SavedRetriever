@@ -4,6 +4,7 @@ import os
 from queue import Queue
 
 import praw
+from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template, request, send_file, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
@@ -207,6 +208,8 @@ def settings():
     save_comments = db_settings.filter_by(setting_name='save_comments').first()
     num_of_posts = db_settings.filter_by(setting_name='number_of_posts').first()
     color = db_settings.filter_by(setting_name='color').first()
+    sched_hour = db_settings.filter_by(setting_name='schedule_hour').first()
+    sched_min = db_settings.filter_by(setting_name='schedule_min').first()
     if form.validate_on_submit():
         if num_of_comments is not None:
             num_of_comments.setting_value = form.number_of_comments.data
@@ -238,6 +241,20 @@ def settings():
                                     setting_value=form.color.data,
                                     setting_type=0)
             db.session.add(color)
+        if sched_hour is not None:
+            sched_hour.setting_value = str(form.schedule_hour.data)
+        else:
+            sched_hour = models.Settings(setting_name="schedule_hour",
+                                         setting_value=form.schedule_hour.data,
+                                         setting_type=1)
+            db.session.add(sched_hour)
+        if sched_min is not None:
+            sched_min.setting_value = str(form.schedule_min.data)
+        else:
+            sched_min = models.Settings(setting_name="schedule_min",
+                                        setting_value=form.schedule_min.data,
+                                        setting_type=1)
+            db.session.add(sched_min)
         try:
             db.session.commit()
         except IntegrityError:
@@ -248,8 +265,11 @@ def settings():
     # if not form.validate_on_submit():
     #     flash("Please enter keys for required services")
     form.color.data = color.setting_value
+    form.schedule_hour.data = sched_hour.setting_value
+    form.schedule_min.data = sched_min.setting_value
     return render_color_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
-                                 num_of_comments=num_of_comments, save_comments=save_comments, num_of_posts=num_of_posts)
+                                 num_of_comments=num_of_comments, save_comments=save_comments,
+                                 num_of_posts=num_of_posts, schedule_hour=sched_hour, schedule_min=sched_min)
 
 
 @app.route("/reddit_wizard")
@@ -287,6 +307,14 @@ def authorize_callback():
 def render_color_template(template, **kwargs):
     global nav_color
     return render_template(template, color=nav_color, **kwargs)
+
+
+@app.before_first_request
+def set_schedule():
+    print("starting scheduler")
+    scheduler = BackgroundScheduler()
+    # scheduler.add_job(run, 'interval', hours=1)
+    # scheduler.start()
 
 
 @app.route('/test')
