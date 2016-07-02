@@ -1,23 +1,22 @@
 import datetime
 import json
-import os
-import re
 import threading
 import time
 import urllib.error
 import urllib.request
-import warnings
 from queue import Empty
 from threading import Thread
 
 import bleach
 import imgurpython.helpers.error
+import os
 import praw
+import re
+import warnings
+from Resources import models
 from imgurpython import ImgurClient
 from readability.readability import Document
 from sqlalchemy.exc import IntegrityError, InterfaceError
-
-from Resources import models
 
 
 class DownloadThread(Thread):
@@ -80,14 +79,18 @@ class DownloadThread(Thread):
         :return: If image was downloaded successfully
         :rtype: bool
         """
+        header = {
+            'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'}
+        request = urllib.request.Request(url, headers=header)
         try:
-            with urllib.request.urlopen(url) as response, open(filename, "wb") as out_file:
+            with urllib.request.urlopen(request) as response, open(filename, "wb") as out_file:
                 data = response.read()
                 out_file.write(data)
-        except OSError as e:
+        except urllib.error.HTTPError as e:
             self.logger.warning("Unable to save image: " + str(e))
             return False
-        except urllib.error.HTTPError:
+        except OSError as e:
+            self.logger.warning("Unable to save image: " + str(e))
             return False
         return True
 
@@ -232,6 +235,7 @@ class DownloadThread(Thread):
                 post = None
                 author = str(i.author)
                 user = models.Author.query.filter_by(username=author)
+                logger.info('Getting post ' + name + ' - ' + title[:255])
                 if user.count() == 0:  # user is not in db
                     user = models.Author(username=author)
                     self.db.session.add(user)
