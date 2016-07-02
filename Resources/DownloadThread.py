@@ -84,8 +84,9 @@ class DownloadThread(Thread):
             with urllib.request.urlopen(url) as response, open(filename, "wb") as out_file:
                 data = response.read()
                 out_file.write(data)
-        except OSError:
-            self.logger.warn("Unable to save image")
+        except OSError as e:
+            self.logger.warning("Unable to save image: " + str(e))
+            return False
         except urllib.error.HTTPError:
             return False
         return True
