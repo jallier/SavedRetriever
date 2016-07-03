@@ -167,6 +167,9 @@ class DownloadThread(Thread):
             text = re.sub(orig, i, text)
         return text
 
+    def _get_image_url_type(self, url):
+        return re.sub("([^A-z0-9])\w+", "", url.split('.')[-1])
+
     def downloader(self):
         self.set_output_thread_condition(1)
         self.stop_request.clear()
@@ -275,12 +278,11 @@ class DownloadThread(Thread):
                 # ====================== #
                 # IS DIRECT LINKED IMAGE #
                 # ====================== #
-                elif hasattr(i, 'url') and re.sub("([^A-z0-9])\w+", "", i.url.split('.')[-1]) in ['jpg', 'png', 'gif',
-                                                                                                  'gifv', 'pdf']:
+                elif (hasattr(i, 'url') and (self._get_image_url_type(i.url) in ['jpg', 'png', 'gif', 'gifv', 'pdf'])
+                      or "reddituploads" in i.url):
                     logger.debug('{} is direct linked image'.format(name))
                     url = i.url
-                    base_filename = "{}_image.{}".format(name, re.sub("([^A-z0-9])\w+", "", url.split('.')[
-                        -1]))  # filename for image. regex same as above.
+                    base_filename = "{}_image.{}".format(name, self._get_image_url_type(url))
                     filename = path + "/" + base_filename
                     filetype = 'image'
 
