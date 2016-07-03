@@ -27,6 +27,11 @@ Once the folder is downloaded:
 
 	 `python SavedRetriever -e -p /home/Downloads/Reddit/`
 
+Using a virtualenv is recommended. This can be achieved by:
+ virtualenv -p python3 env
+ source env/bin/activate or source env/bin/activate.fish if using the fish shell
+ "pip install -r requirements.txt" to install the required python packages
+
 	
 ##Services required##
 As of version 0.9, SR requires the use of the these 3rd party services. This means that a valid account and developer oauth tokens are needed for each of the following services (ie. you must register an app of your own and use the tokens they give you):
