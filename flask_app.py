@@ -1,16 +1,15 @@
 import json
 import logging
-import os
 from queue import Queue
 
+import os
 import praw
+from Resources.forms import SettingsForm
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template, request, send_file, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
-
-from Resources.forms import SettingsForm
 
 app = Flask(__name__)
 app.config.from_object("config")
@@ -334,4 +333,7 @@ def test():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import first_run
+
+    first_run.check_if_first_run()
+    app.run(debug=False)
