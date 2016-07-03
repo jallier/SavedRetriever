@@ -19,16 +19,13 @@ db = SQLAlchemy(app)
 from Resources import models
 from Resources.DownloadThread import DownloadThread
 
+logger = logging.getLogger('werkzeug')
 thread_status_queue = Queue()
-mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)
-
-nav_color = "blue"
+mythread = DownloadThread(db, logger, thread_status_queue)
 
 
 @app.route("/")
 def main():
-    global nav_color
-    nav_color = models.Settings.query.filter_by(setting_name='color').first().setting_value
     page = request.args.get('page')
     sort = request.args.get('sort')
     if page is not None and page is not 'None':
@@ -45,7 +42,7 @@ def main():
     else:
         posts = posts.order_by(desc(models.Post.date_downloaded))
 
-    posts_per_page = int(db.session.query(models.Settings).filter_by(setting_name="number_of_posts").first().setting_value)
+    posts_per_page = int(settings_dict['number_of_posts'].setting_value)
     posts = posts.paginate(page, posts_per_page, False)
     return render_color_template('index.html', posts=posts)
 
@@ -200,69 +197,58 @@ def delete_all_posts():
 
 @app.route("/settings", methods=['GET', 'POST'])
 def settings():
+    global settings_dict
     form = SettingsForm()
-    db_settings = db.session.query(models.Settings)
-    reddit_token = db_settings.filter_by(setting_name='reddit_refresh_token').first()
-    num_of_comments = db_settings.filter_by(setting_name='number_of_comments').first()
-    save_comments = db_settings.filter_by(setting_name='save_comments').first()
-    num_of_posts = db_settings.filter_by(setting_name='number_of_posts').first()
-    color = db_settings.filter_by(setting_name='color').first()
-    sched_hour = db_settings.filter_by(setting_name='schedule_hour').first()
-    sched_min = db_settings.filter_by(setting_name='schedule_min').first()
+    reddit_token = settings_dict['reddit_refresh_token']
+    num_of_comments = settings_dict['number_of_comments']
+    save_comments = settings_dict['save_comments']
+    num_of_posts = settings_dict['number_of_posts']
+    color = settings_dict['color']
+    sched_hour = settings_dict['schedule_hour']
+    sched_min = settings_dict['schedule_min']
     if form.validate_on_submit():
-        if num_of_comments is not None:
-            num_of_comments.setting_value = form.number_of_comments.data
-        else:
-            num_of_comments = models.Settings(setting_name="number_of_comments",
-                                              setting_value=form.number_of_comments.data,
-                                              setting_type=2)
-            db.session.add(num_of_comments)
-        if save_comments is not None:
-            save_comments.setting_value = str(form.save_comments.data)
-        else:
-            save_comments = models.Settings(setting_name="save_comments",
-                                            setting_value=str(form.save_comments.data),
-                                            setting_type=1)
-            db.session.add(save_comments)
-        if num_of_posts is not None:
-            num_of_posts.setting_value = str(form.number_of_posts.data)
-        else:
-            num_of_posts = models.Settings(setting_name="number_of_posts",
-                                           setting_value=form.number_of_posts.data,
-                                           setting_type=2)
-            db.session.add(num_of_posts)
-        if color is not None:
-            color.setting_value = str(form.color.data)
-            global nav_color
-            nav_color = color.setting_value
-        else:
-            color = models.Settings(setting_name="color",
-                                    setting_value=form.color.data,
-                                    setting_type=0)
-            db.session.add(color)
-        if sched_hour is not None:
-            sched_hour.setting_value = str(form.schedule_hour.data)
-        else:
-            sched_hour = models.Settings(setting_name="schedule_hour",
-                                         setting_value=form.schedule_hour.data,
-                                         setting_type=1)
-            db.session.add(sched_hour)
-        if sched_min is not None:
-            sched_min.setting_value = str(form.schedule_min.data)
-        else:
-            sched_min = models.Settings(setting_name="schedule_min",
-                                        setting_value=form.schedule_min.data,
-                                        setting_type=1)
-            db.session.add(sched_min)
+        if form.number_of_comments.data != num_of_comments.setting_value:
+            settings_dict['number_of_comments'].setting_value = form.number_of_comments.data
+            db.session.query(models.Settings).filter_by(
+                setting_name='number_of_comments').first().setting_value = form.number_of_comments.data
+
+        if form.save_comments.data != save_comments.setting_value:
+            settings_dict['save_comments'].setting_value = form.save_comments.data
+            db.session.query(models.Settings).filter_by(
+                setting_name='save_comments').first().setting_value = form.save_comments.data
+
+        if form.number_of_posts.data != num_of_posts.setting_value:
+            settings_dict['number_of_posts'].setting_value = form.number_of_posts.data
+            db.session.query(models.Settings).filter_by(
+                setting_name='number_of_posts').first().setting_value = form.number_of_posts.data
+
+        if form.color.data != color.setting_value:
+            settings_dict['color'].setting_value = form.color.data
+            db.session.query(models.Settings).filter_by(setting_name='color').first().setting_value = form.color.data
+
+        if form.schedule_hour.data != sched_hour.setting_value:
+            settings_dict['schedule_hour'].setting_value = form.schedule_hour.data
+            db.session.query(models.Settings).filter_by(
+                setting_name='schedule_hour').first().setting_value = form.schedule_hour.data
+
+        if form.schedule_min.data != sched_min.setting_value:
+            settings_dict['schedule_min'].setting_value = form.schedule_min.data
+            db.session.query(models.Settings).filter_by(
+                setting_name='schedule_min').first().setting_value = form.schedule_min.data
+
         try:
             db.session.commit()
-        except IntegrityError:
+            logger.info("Settings updated")
+        except IntegrityError as e:
             db.session.rollback()
+            logger.error("Error updating settings - %s", e)
 
         return redirect('/settings')
 
     # if not form.validate_on_submit():
     #     flash("Please enter keys for required services")
+
+    # Set the values of the input boxes in the form
     form.color.data = color.setting_value
     form.schedule_hour.data = sched_hour.setting_value
     form.schedule_min.data = sched_min.setting_value
@@ -304,8 +290,7 @@ def authorize_callback():
 
 
 def render_color_template(template, **kwargs):
-    global nav_color
-    return render_template(template, color=nav_color, **kwargs)
+    return render_template(template, color=settings_dict['color'].setting_value, **kwargs)
 
 
 @app.before_first_request
@@ -333,7 +318,11 @@ def test():
 
 
 if __name__ == "__main__":
-    import first_run
+    settings_dict = {}
+    for setting in models.Settings.query.all():
+        settings_dict[setting.setting_name] = setting
+    # Create a dict of settings so that the db doesn't have to be queried constantly.
 
+    import first_run
     first_run.check_if_first_run()
-    app.run(debug=False)
+    app.run(debug=True)
