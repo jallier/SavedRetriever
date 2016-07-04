@@ -21,7 +21,6 @@ from Resources.DownloadThread import DownloadThread
 
 logger = logging.getLogger('werkzeug')
 thread_status_queue = Queue()
-mythread = DownloadThread(db, logger, thread_status_queue)
 
 
 @app.route("/")
@@ -322,6 +321,7 @@ if __name__ == "__main__":
     for setting in models.Settings.query.all():
         settings_dict[setting.setting_name] = setting
     # Create a dict of settings so that the db doesn't have to be queried constantly.
+    mythread = DownloadThread(db, logger, thread_status_queue, settings_dict)
 
     import first_run
     first_run.check_if_first_run()

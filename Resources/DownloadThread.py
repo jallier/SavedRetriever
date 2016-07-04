@@ -20,13 +20,14 @@ from sqlalchemy.exc import IntegrityError, InterfaceError
 
 
 class DownloadThread(Thread):
-    def __init__(self, db, logger, output_queue):
+    def __init__(self, db, logger, output_queue, settings_dict):
         Thread.__init__(self)
         self.db = db
         self.logger = logger
         self.output_queue = output_queue
         self.stop_request = threading.Event()
-        self.count = 0
+        self.post_downloaded_count = 0
+        self.settings_dict = settings_dict
         self.allowed_tags = [
             'a',
             'b',
@@ -119,7 +120,7 @@ class DownloadThread(Thread):
         super(DownloadThread, self).join(timeout)
 
     def get_number_items_downloaded(self):
-        return self.count
+        return self.post_downloaded_count
 
     def _get_comments(self, submission, number_of_comments, r):
         if type(submission) == praw.objects.Comment:
@@ -179,9 +180,8 @@ class DownloadThread(Thread):
         logger.info("\n###########\nStarting SR\n###########")
 
         logger.debug("Getting settings from db")
-        settings = self.db.session.query(models.Settings)
-        get_comments = settings.filter_by(setting_name="save_comments").first().setting_value
-        number_of_comments = settings.filter_by(setting_name="number_of_comments").first().setting_value
+        get_comments = self.settings_dict['save_comments'].setting_value
+        number_of_comments = self.settings_dict['number_of_comments'].setting_value
 
         path = "static/SRDownloads"
         if not os.path.exists(path):
@@ -191,7 +191,7 @@ class DownloadThread(Thread):
         logger.info('Authenticating with Reddit')
         client_id = '_Nxh9h0Tys5KCQ'
         redirect_uri = 'http://127.0.0.1:5000/authorize_callback'
-        refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first().setting_value
+        refresh_token = self.settings_dict['reddit_refresh_token'].setting_value
         user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
 
         try:
@@ -216,7 +216,7 @@ class DownloadThread(Thread):
 
         logger.info("Beginning to save files to db...")
         items = r.get_me().get_saved(limit=4)
-        self.count = 0
+        self.post_downloaded_count = 0
         # Convert saved post generator to a list in order to iterate backwards, so that the most recent saved post
         # is the most recently downloaded
         for i in list(items)[::-1]:
@@ -474,7 +474,7 @@ class DownloadThread(Thread):
                     self.db.session.rollback()
                     self.logger.error("Error adding post to db - {}".format(post.title))
                     continue
-                self.count += 1
+                self.post_downloaded_count += 1
                 logger.info('Saved ' + name + ' - ' + title[:255])
 
         # end of for loop
