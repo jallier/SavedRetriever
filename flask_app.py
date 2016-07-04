@@ -172,7 +172,7 @@ def run():
             mythread.start()
         except RuntimeError as e:
             if e.args[0] == "threads can only be started once":  # Thread has already run; start a new one
-                mythread = DownloadThread(db, logging.getLogger('werkzeug'), thread_status_queue)
+                mythread = DownloadThread(db, logger, thread_status_queue, settings_dict)
                 mythread.start()
             else:
                 print(e)
@@ -203,8 +203,8 @@ def settings():
     save_comments = settings_dict['save_comments']
     num_of_posts = settings_dict['number_of_posts']
     color = settings_dict['color']
-    sched_hour = settings_dict['schedule_hour']
-    sched_min = settings_dict['schedule_min']
+    sched_hour = settings_dict['schedule_hour'].setting_value
+    sched_min = settings_dict['schedule_min'].setting_value
     if form.validate_on_submit():
         if form.number_of_comments.data != num_of_comments.setting_value:
             settings_dict['number_of_comments'].setting_value = form.number_of_comments.data
@@ -225,12 +225,12 @@ def settings():
             settings_dict['color'].setting_value = form.color.data
             db.session.query(models.Settings).filter_by(setting_name='color').first().setting_value = form.color.data
 
-        if form.schedule_hour.data != sched_hour.setting_value:
+        if form.schedule_hour.data != sched_hour:
             settings_dict['schedule_hour'].setting_value = form.schedule_hour.data
             db.session.query(models.Settings).filter_by(
                 setting_name='schedule_hour').first().setting_value = form.schedule_hour.data
 
-        if form.schedule_min.data != sched_min.setting_value:
+        if form.schedule_min.data != sched_min:
             settings_dict['schedule_min'].setting_value = form.schedule_min.data
             db.session.query(models.Settings).filter_by(
                 setting_name='schedule_min').first().setting_value = form.schedule_min.data
@@ -242,18 +242,24 @@ def settings():
             db.session.rollback()
             logger.error("Error updating settings - %s", e)
 
-        return redirect('/settings')
+        # Update job schedule if data has changed since last write
+        if form.schedule_hour.data != sched_hour or form.schedule_min.data != sched_min:
+            global job
+            job.reschedule('cron', minute=settings_dict['schedule_min'].setting_value,
+                                   hour=settings_dict['schedule_hour'].setting_value,
+                                   day='*')
+            logger.info("Next job rescheduled to {}:{}".format(settings_dict['schedule_hour'].setting_value,
+                                                               settings_dict['schedule_min'].setting_value))
 
-    # if not form.validate_on_submit():
-    #     flash("Please enter keys for required services")
+        return redirect('/settings')
 
     # Set the values of the input boxes in the form
     form.color.data = color.setting_value
-    form.schedule_hour.data = sched_hour.setting_value
-    form.schedule_min.data = sched_min.setting_value
+    form.schedule_hour.data = settings_dict['schedule_hour'].setting_value
+    form.schedule_min.data = settings_dict['schedule_min'].setting_value
     return render_color_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
                                  num_of_comments=num_of_comments, save_comments=save_comments,
-                                 num_of_posts=num_of_posts, schedule_hour=sched_hour, schedule_min=sched_min)
+                                 num_of_posts=num_of_posts)
 
 
 @app.route("/reddit_wizard")
@@ -292,14 +298,6 @@ def render_color_template(template, **kwargs):
     return render_template(template, color=settings_dict['color'].setting_value, **kwargs)
 
 
-@app.before_first_request
-def set_schedule():
-    print("starting scheduler")
-    scheduler = BackgroundScheduler()
-    # scheduler.add_job(run, 'interval', hours=1)
-    # scheduler.start()
-
-
 @app.route('/test')
 def test():
     CLIENT_ID = '_Nxh9h0Tys5KCQ'
@@ -316,13 +314,30 @@ def test():
     return r.get_me().name
 
 
+def set_schedule():
+    """
+    Set up the scheduler to run the download thread (via the run() function) at the time specified in the settings
+
+    :return: The job created for the scheduler for the run() function.
+    :rtype: apscheduler.job.Job
+    """
+    logger.info("Starting scheduler")
+    scheduler = BackgroundScheduler()
+    cron_job = scheduler.add_job(run, 'cron', minute=settings_dict['schedule_min'].setting_value,
+                                 hour=settings_dict['schedule_hour'].setting_value,
+                                 day='*')
+    scheduler.start()
+    return cron_job
+
+
 if __name__ == "__main__":
     settings_dict = {}
     for setting in models.Settings.query.all():
         settings_dict[setting.setting_name] = setting
     # Create a dict of settings so that the db doesn't have to be queried constantly.
     mythread = DownloadThread(db, logger, thread_status_queue, settings_dict)
+    job = set_schedule()
 
     import first_run
     first_run.check_if_first_run()
-    app.run(debug=True)
+    app.run(debug=False)
