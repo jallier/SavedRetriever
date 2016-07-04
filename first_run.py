@@ -9,7 +9,6 @@ def check_if_first_run():
     """
     Create the sqlite database and write the initial values the first time the app is run.
     First run status is determined by presence of app.db.
-    :return:
     """
     if not os.path.exists('app.db'):
         print("No db detected - creating...")
@@ -19,17 +18,16 @@ def check_if_first_run():
 def _create_db():
     """
     Function to create the db and write the values
-    :return:
     """
     db_create.main()
     print("Adding initial values...")
-    settings = []
-    settings.append(models.Settings(setting_name="color", setting_value="blue", setting_type=0))
-    settings.append(models.Settings(setting_name="number_of_posts", setting_value=20, setting_type=2))
-    settings.append(models.Settings(setting_name="schedule_hour", setting_value=20, setting_type=2))
-    settings.append(models.Settings(setting_name="schedule_min", setting_value=5, setting_type=2))
-    settings.append(models.Settings(setting_name="number_of_comments", setting_value=5, setting_type=2))
-    settings.append(models.Settings(setting_name="save_comments", setting_value="True", setting_type=1))
+    settings = [models.Settings(setting_name="color", setting_value="blue", setting_type=0),
+                models.Settings(setting_name="number_of_posts", setting_value=20, setting_type=2),
+                models.Settings(setting_name="run_on_schedule", setting_value="True", setting_type=1),
+                models.Settings(setting_name="schedule_hour", setting_value=20, setting_type=2),
+                models.Settings(setting_name="schedule_min", setting_value=5, setting_type=2),
+                models.Settings(setting_name="save_comments", setting_value="True", setting_type=1),
+                models.Settings(setting_name="number_of_comments", setting_value=5, setting_type=2)]
 
     for x in settings:
         db.session.add(x)

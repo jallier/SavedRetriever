@@ -68,11 +68,13 @@ class DownloadThread(Thread):
             self.output_queue.put(0)
 
     def run(self):
+        """Start the download"""
         self.downloader()
 
     def image_saver(self, url, filename):
         """
         Saves an image to disk in the location specified
+
         :param url: url of the image to download
         :type url: string
         :param filename: path and filename of file to download
@@ -98,6 +100,7 @@ class DownloadThread(Thread):
     def subreddit_linker(self, input_text):
         """
         Fixes non-valid links to subreddits in text
+
         :param input_text: html string to fix
         :type input_text: str
         :return: fixed html str
@@ -112,17 +115,50 @@ class DownloadThread(Thread):
         return input_text
 
     def set_output_thread_condition(self, condition):
+        """
+        Sets the condition of the output thread
+
+        - 0 = Ready to start
+        - 1 = Running
+        - 2 = Thread completed/stopped
+
+        :param condition: Value of the condition
+        :type condition: int
+        :return: None
+        """
         self.output_queue.get(False)
         self.output_queue.put(condition)
 
     def join(self, timeout=None):
+        """
+        Request the thread to stop
+
+        :param timeout:
+        :return:
+        """
         self.stop_request.set()
         super(DownloadThread, self).join(timeout)
 
     def get_number_items_downloaded(self):
+        """
+        Get how many items have been downloaded by the thread
+
+        :return: Amount of downloaded posts
+        :rtype: int
+        """
         return self.post_downloaded_count
 
     def _get_comments(self, submission, number_of_comments, r):
+        """
+        Get the top n comments (including author and score) from a given submission, and store them in the database
+        in JSON format.
+
+        :param submission: PRAW object of current submission
+        :param number_of_comments: number of comments to download
+        :type number_of_comments: int
+        :param r: global PRAW object used to interface with reddit
+        :return: JSON string of comments
+        """
         if type(submission) == praw.objects.Comment:
             submission = r.get_submission(submission.permalink)
             comments = submission.comments[0].replies
@@ -140,22 +176,41 @@ class DownloadThread(Thread):
 
             if len(comment.replies) != 0 and type(comment.replies[0]) is not praw.objects.MoreComments:
                 my_json[comment_id]['child'] = {'points': comment.replies[0].score}
-                my_json[comment_id]['child']['body'] = comment.replies[0].body_html if comment.replies[0].body_html is not None else ''
-                my_json[comment_id]['child']['author'] = comment.replies[0].author.name if comment.replies[0].author is not None else 'deleted'
+                my_json[comment_id]['child']['body'] = comment.replies[0].body_html if comment.replies[
+                                                                                           0].body_html is not None else ''
+                my_json[comment_id]['child']['author'] = comment.replies[0].author.name if comment.replies[
+                                                                                               0].author is not None else 'deleted'
             count += 1
         return json.dumps(my_json)
 
     def _add_image_to_db(self, base_filename, filename):
+        """
+        Adds a downloaded image to the database to store the filepath of the image.
+
+        :param base_filename: name of the file to be saved
+        :type base_filename: str
+        :param filename: file path of the file to be saved, relative to top level package
+        :type filename: str
+        :return: None
+        """
         try:
             image = models.Images(file_name=base_filename, file_path=filename)
             self.db.session.add(image)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
-            self.logger.warning(e)
-            self.logger.warning("Integrity error - Likely due to image already existing in the db")
+            self.logger.error(e)
+            self.logger.error("Integrity error - Likely due to image already existing in the db")
 
     def _make_article_img_responsive(self, text):
+        """
+        Add img-responsive css class to img tags within html of articles to make them display better with bootstrap.
+
+        :param text: html of article to be scanned
+        :type text: str
+        :return: scanned and fixed html string
+        :rtype: str
+        """
         capture = '<img[\s\S]+?>'
         sub = 'class=".*?"'
         cap = re.findall(capture, text)
@@ -169,9 +224,25 @@ class DownloadThread(Thread):
         return text
 
     def _get_image_url_type(self, url):
+        """
+        | Get the file extention of the url
+        | eg .png, .jpg etc
+
+        :param url: url to be checked for extention
+        :type url: str
+        :return: extention of the url
+        :rtype: str
+        """
         return re.sub("([^A-z0-9])\w+", "", url.split('.')[-1])
 
     def downloader(self):
+        """
+        Main download method. Gets index of saved posts from reddit using PRAW, then checks them against the posts
+        already saved in the database. Posts will be downloaded and saved according to type of post (selfpost, image,
+        image album, webm, article.)
+
+        :return: None
+        """
         self.set_output_thread_condition(1)
         self.stop_request.clear()
         warnings.warn("Suppressed Resource warning", ResourceWarning)  # suppresses sll unclosed socket warnings.
