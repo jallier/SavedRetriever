@@ -213,9 +213,9 @@ def settings():
                 setting_name='number_of_comments').first().setting_value = form.number_of_comments.data
 
         if form.save_comments.data != save_comments.setting_value:
-            settings_dict['save_comments'].setting_value = form.save_comments.data
+            settings_dict['save_comments'].setting_value = str(form.save_comments.data)
             db.session.query(models.Settings).filter_by(
-                setting_name='save_comments').first().setting_value = form.save_comments.data
+                setting_name='save_comments').first().setting_value = str(form.save_comments.data)
 
         if form.number_of_posts.data != num_of_posts.setting_value:
             settings_dict['number_of_posts'].setting_value = form.number_of_posts.data
