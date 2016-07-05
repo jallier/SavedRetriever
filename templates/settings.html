@@ -21,6 +21,16 @@
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/ripples.min.js')}}"></script>
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
 
+    <!-- Bootstrap Material Snackbar -->
+    <link href="{{url_for('static', filename='bootstrap-material/dist/css/snackbar.min.css')}}" rel=stylesheet
+          type="text/css">
+    <script src="{{url_for('static', filename='bootstrap-material/dist/js/snackbar.min.js')}}"></script>
+
+    <!-- cron js -->
+    <script src="{{url_for('static', filename='jquery-cron/jquery-cron-min.js')}}"></script>
+    <script src="{{url_for('static', filename='cron.js')}}"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='jquery-cron/jquery-cron.css')}}">
+
     {% if color == 'blue' %}
     <link rel="stylesheet" type="text/css"
           href="{{url_for('static', filename='colored-navbar/blue.css')}}">
@@ -34,6 +44,18 @@
     <link rel="stylesheet" type="text/css"
           href="{{url_for('static', filename='colored-navbar/yellow.css')}}">
     {% endif %}
+
+    <style>
+        .cron {
+            width: 50%;
+        }
+
+        .cronInput {
+            width: 100%;
+            text-align: center;
+            font-size: 200%;
+        }
+    </style>
 
     <title>SavedRetriever Settings</title>
 </head>
@@ -82,7 +104,7 @@
                 </a>
             </div>
             <div class="bs-component">
-                <form method="post">
+                <form method="post" onkeypress="return event.keyCode != 13;">
                     {{ form.hidden_tag() }}
                     <div class="form-group is-empty {% if reddit_token.setting_value is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label">Reddit OAuth Token</label>
@@ -138,6 +160,16 @@
                         <div class="form-group">
                             <label for="schedule_min">Minute: </label>
                             {{ form.schedule_min(class_="form-control", style="width:25px; direction:rtl;") }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="cron">
+                            <input class="cronInput" type="text"/>
+                        </div>
+                        <br>
+                        <div id="cronSelector"></div>
+                        <div class="btn" id="cronValidate">
+                            Validate
                         </div>
                     </div>
                     <div>
