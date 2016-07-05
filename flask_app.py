@@ -203,8 +203,7 @@ def settings():
     save_comments = settings_dict['save_comments']
     num_of_posts = settings_dict['number_of_posts']
     color = settings_dict['color']
-    sched_hour = settings_dict['schedule_hour'].setting_value
-    sched_min = settings_dict['schedule_min'].setting_value
+    cron_string = settings_dict['cron_string'].setting_value
     if form.validate_on_submit():
         if form.number_of_comments.data != num_of_comments.setting_value:
             settings_dict['number_of_comments'].setting_value = form.number_of_comments.data
@@ -225,15 +224,10 @@ def settings():
             settings_dict['color'].setting_value = form.color.data
             db.session.query(models.Settings).filter_by(setting_name='color').first().setting_value = form.color.data
 
-        if form.schedule_hour.data != sched_hour:
-            settings_dict['schedule_hour'].setting_value = form.schedule_hour.data
+        if form.cron_string.data != cron_string:
+            settings_dict['cron_string'].setting_value = form.cron_string.data
             db.session.query(models.Settings).filter_by(
-                setting_name='schedule_hour').first().setting_value = form.schedule_hour.data
-
-        if form.schedule_min.data != sched_min:
-            settings_dict['schedule_min'].setting_value = form.schedule_min.data
-            db.session.query(models.Settings).filter_by(
-                setting_name='schedule_min').first().setting_value = form.schedule_min.data
+                setting_name='cron_string').first().setting_value = form.cron_string.data
 
         try:
             db.session.commit()
@@ -243,23 +237,20 @@ def settings():
             logger.error("Error updating settings - %s", e)
 
         # Update job schedule if data has changed since last write
-        if form.schedule_hour.data != sched_hour or form.schedule_min.data != sched_min:
+        if form.cron_string.data != cron_string:
             global job
-            job.reschedule('cron', minute=settings_dict['schedule_min'].setting_value,
-                                   hour=settings_dict['schedule_hour'].setting_value,
-                                   day='*')
-            logger.info("Next job rescheduled to {}:{}".format(settings_dict['schedule_hour'].setting_value,
-                                                               settings_dict['schedule_min'].setting_value))
+            cron_array = get_cron_array(settings_dict['cron_string'].setting_value)
+            job.reschedule('cron', minute=cron_array[0], hour=cron_array[1], day=cron_array[2],
+                           month=cron_array[3], day_of_week=cron_array[4])
+            logger.info("Next job rescheduled to {}".format(settings_dict['cron_string'].setting_value))
 
         return redirect('/settings')
 
     # Set the values of the input boxes in the form
     form.color.data = color.setting_value
-    form.schedule_hour.data = settings_dict['schedule_hour'].setting_value
-    form.schedule_min.data = settings_dict['schedule_min'].setting_value
     return render_color_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
                                  num_of_comments=num_of_comments, save_comments=save_comments,
-                                 num_of_posts=num_of_posts)
+                                 num_of_posts=num_of_posts, cron_string=cron_string)
 
 
 @app.route("/reddit_wizard")
@@ -314,6 +305,25 @@ def test():
     return r.get_me().name
 
 
+def get_cron_array(cron_string):
+    """
+    Create an array of strings representing the values for each field in the cron string. String split on space (' ')
+    Fields are in order according to standard cron format:
+
+    - Minute (0-59)
+    - Hour (0-23)
+    - Day of Month (1-31)
+    - Month (0-12)
+    - Weekday (0-6, Monday is 0)
+
+    :param cron_string: Input cron string
+    :type cron_string: str
+    :return: Array of strings representing each field of cron string.
+    :rtype: list
+    """
+    return cron_string.split(" ")
+
+
 def set_schedule():
     """
     Set up the scheduler to run the download thread (via the run() function) at the time specified in the settings
@@ -323,9 +333,9 @@ def set_schedule():
     """
     logger.info("Starting scheduler")
     scheduler = BackgroundScheduler()
-    cron_job = scheduler.add_job(run, 'cron', minute=settings_dict['schedule_min'].setting_value,
-                                 hour=settings_dict['schedule_hour'].setting_value,
-                                 day='*')
+    cron_array = get_cron_array(settings_dict['cron_string'].setting_value)
+    cron_job = scheduler.add_job(run, 'cron', minute=cron_array[0], hour=cron_array[1], day=cron_array[2],
+                                 month=cron_array[3], day_of_week=cron_array[4])
     scheduler.start()
     return cron_job
 

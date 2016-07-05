@@ -104,7 +104,7 @@
                 </a>
             </div>
             <div class="bs-component">
-                <form method="post" onkeypress="return event.keyCode != 13;">
+                <form method="post" onkeypress="return event.keyCode != 13;" name="settingsForm" onsubmit="return isValid()">
                     {{ form.hidden_tag() }}
                     <div class="form-group is-empty {% if reddit_token.setting_value is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label">Reddit OAuth Token</label>
@@ -150,21 +150,15 @@
                         {{ form.color(class_="form-control") }}
                         <!--http://work.smarchal.com/twbscolor/css/e74c3cc0392becf0f1ffbbbc0-->
                     </div>
-                    <div class="form-group form-inline">
-                        <label>Schedule</label>
-                        <br>
-                        <div class="form-group">
-                            <label for="schedule_hour">Hour: </label>
-                            {{ form.schedule_hour(class_="form-control", style="width:25px; direction:rtl;") }}
-                        </div>
-                        <div class="form-group">
-                            <label for="schedule_min">Minute: </label>
-                            {{ form.schedule_min(class_="form-control", style="width:25px; direction:rtl;") }}
-                        </div>
-                    </div>
                     <div>
+                        <h3>
+                            Scheduler
+                        </h3>
+                        SR uses cron style scheduling. If you are familiar with cron on linux, feel free to type in your
+                        preferred time for SR to download, otherwise select a time from the dropdowns.
                         <div class="cron">
-                            <input class="cronInput" type="text"/>
+                            <!--<input class="cronInput" type="text"/>-->
+                            {{ form.cron_string(class_="cronInput", value=cron_string, autocomplete="off") }}
                         </div>
                         <br>
                         <div id="cronSelector"></div>

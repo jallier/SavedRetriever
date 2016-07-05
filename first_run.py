@@ -24,8 +24,7 @@ def _create_db():
     settings = [models.Settings(setting_name="color", setting_value="blue", setting_type=0),
                 models.Settings(setting_name="number_of_posts", setting_value=20, setting_type=2),
                 models.Settings(setting_name="run_on_schedule", setting_value="True", setting_type=1),
-                models.Settings(setting_name="schedule_hour", setting_value=20, setting_type=2),
-                models.Settings(setting_name="schedule_min", setting_value=5, setting_type=2),
+                models.Settings(setting_name="cron_string", setting_value="0 0 * * 0", setting_type=0),
                 models.Settings(setting_name="save_comments", setting_value="True", setting_type=1),
                 models.Settings(setting_name="number_of_comments", setting_value=5, setting_type=2)]
 

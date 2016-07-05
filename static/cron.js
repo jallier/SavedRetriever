@@ -1,5 +1,16 @@
 //Regex to capture *, digits and spaces
 re = /[\d\*]+/;
+valid = true;
+
+function isValid(){
+    if(!valid){
+        $.snackbar({
+                content: "Invalid cron string; please enter correct string"
+            });
+        return false;
+    }
+    return true;
+}
 
 function validCronString(cronValue) {
     /**
@@ -42,25 +53,9 @@ function validCronString(cronValue) {
 $(document).ready(function() {
     var input = $(".cronInput");
     var cron = $('#cronSelector');
+    var count = 0;
 
-    // apply cron with default options
-    cron.cron({
-        onChange: function() {
-            if (!input.is(":focus")){
-                input.val(cron.cron("value"));
-            }
-        }
-    });
-
-    input.keyup(function() {
-        if (!validCronString(input.val())) {
-            input.css("border-color", "red");
-        } else {
-            input.css("border-color", "initial");
-            cron.cron("value", input.val());
-        }
-    });
-
+    //Snackbar validation notification
     $("#cronValidate").click(function(){
         if(validCronString(input.val())){
             $.snackbar({
@@ -70,6 +65,30 @@ $(document).ready(function() {
             $.snackbar({
                 content: "Cron string invalid. Please check and try again"
             });
+        }
+    });
+
+    // apply cron with default options
+    cron.cron({
+        initial: input.val(),
+        onChange: function() {
+            console.log(count);
+            if (!input.is(":focus") && count != 0){
+                input.val(cron.cron("value"));
+            }
+            count = 1; // Page has rendered, value can now be updated.
+        }
+    });
+
+    //Show input color as validation and change the cron selectors.
+    input.keyup(function() {
+        if (!validCronString(input.val())) {
+            input.css("border-color", "red");
+            valid=false;
+        } else {
+            input.css("border-color", "initial");
+            cron.cron("value", input.val());
+            valid=true;
         }
     });
 });
