@@ -170,14 +170,40 @@
                         <input type="submit" class="btn btn-raised btn-primary" value="SAVE">
                         <div class="ripple-container"></div>
                     </div>
-                    <div>
-                        {{form.errors}}
-                    </div>
                 </form>
             </div>
         </div>
     </div>
     <div class="row">
+        <div class="col-md-12">
+            {% with errors = get_flashed_messages(category_filter=["error"]) %}
+            {% if errors %}
+            <div class="bs-component">
+                <div class="alert alert-dismissible alert-warning">
+                    <button type="button" class="close" data-dismiss="alert">×</button>
+                    <h4>Form error</h4>
+                    {% for error in errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            {% with messages = get_flashed_messages(category_filter=["message"]) %}
+            {% if messages %}
+            <div class="bs-component">
+                <div class="alert alert-dismissible alert-info">
+                    <button type="button" class="close" data-dismiss="alert">×</button>
+                    <h4>Success!</h4>
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
         <div class="col-md-12">
             <h4>Status</h4>
             <table class="table table-striped table-hover">
@@ -216,23 +242,13 @@
     <div class="row">
         <div class="col-md-3">
             <div>
-                <a href="javascript:void(0)" class="btn btn-raised btn-info">
+                <a href="javascript:void(0)" class="btn btn-raised btn-info disabled">
                     Export posts to html
                     <div class="ripple-container"></div>
                 </a>
             </div>
         </div>
-        <div class="col-md-3">
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-            <ul>
-                {% for message in messages %}
-                <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-            {% endwith %}
-        </div>
+
     </div>
 </div>
 
@@ -241,12 +257,6 @@
 $(function() {
   $.material.init();
 });
-
-
-
-
-
-
 </script>
 
 </body>

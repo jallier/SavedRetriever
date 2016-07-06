@@ -6,7 +6,7 @@ import os
 import praw
 from Resources.forms import SettingsForm
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask, render_template, request, send_file, jsonify, redirect
+from flask import Flask, render_template, request, send_file, jsonify, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
@@ -232,6 +232,7 @@ def settings():
         try:
             db.session.commit()
             logger.info("Settings updated")
+            flash("Settings updated successfully")
         except IntegrityError as e:
             db.session.rollback()
             logger.error("Error updating settings - %s", e)
@@ -245,12 +246,20 @@ def settings():
             logger.info("Next job rescheduled to {}".format(settings_dict['cron_string'].setting_value))
 
         return redirect('/settings')
+    else:
+        flash_errors(form)
 
     # Set the values of the input boxes in the form
     form.color.data = color.setting_value
     return render_color_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
                                  num_of_comments=num_of_comments, save_comments=save_comments,
                                  num_of_posts=num_of_posts, cron_string=cron_string)
+
+
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (getattr(form, field).label.text, error), "error")
 
 
 @app.route("/reddit_wizard")

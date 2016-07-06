@@ -2,11 +2,11 @@
 re = /[\d\*]+/;
 valid = true;
 
-function isValid(){
-    if(!valid){
+function isValid() {
+    if (!valid) {
         $.snackbar({
-                content: "Invalid cron string; please enter correct string"
-            });
+            content: "Invalid cron string; please enter correct string"
+        });
         return false;
     }
     return true;
@@ -56,8 +56,8 @@ $(document).ready(function() {
     var count = 0;
 
     //Snackbar validation notification
-    $("#cronValidate").click(function(){
-        if(validCronString(input.val())){
+    $("#cronValidate").click(function() {
+        if (validCronString(input.val())) {
             $.snackbar({
                 content: "Cron string valid"
             });
@@ -73,7 +73,7 @@ $(document).ready(function() {
         initial: input.val(),
         onChange: function() {
             console.log(count);
-            if (!input.is(":focus") && count != 0){
+            if (!input.is(":focus") && count != 0) {
                 input.val(cron.cron("value"));
             }
             count = 1; // Page has rendered, value can now be updated.
@@ -84,11 +84,11 @@ $(document).ready(function() {
     input.keyup(function() {
         if (!validCronString(input.val())) {
             input.css("border-color", "red");
-            valid=false;
+            valid = false;
         } else {
             input.css("border-color", "initial");
             cron.cron("value", input.val());
-            valid=true;
+            valid = true;
         }
     });
 });
