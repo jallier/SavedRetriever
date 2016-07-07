@@ -22,8 +22,11 @@
     <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
 
     <!-- Bootstrap Material Snackbar -->
-    <link href="{{url_for('static', filename='bootstrap-material/dist/css/snackbar.min.css')}}" rel=stylesheet type="text/css">
-    <script src="{{url_for('static', filename='bootstrap-material/dist/js/snackbar.min.js')}}"></script>
+    <link href="{{url_for('static', filename='snackbarjs/dist/snackbar.min.css')}}" rel=stylesheet
+          type="text/css">
+    <link href="{{url_for('static', filename='snackbarjs/themes-css/material.css')}}" rel=stylesheet
+          type="text/css">
+    <script src="{{url_for('static', filename='snackbarjs/dist/snackbar.min.js')}}"></script>
 
     {% if color == 'blue' %}
     <link rel="stylesheet" type="text/css"

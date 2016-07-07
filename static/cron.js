@@ -3,6 +3,9 @@ re = /[\d\*]+/;
 valid = true;
 
 function isValid() {
+    /**
+    * Checks if current input is valid. Used for when save button on settings page is clicked.
+    */
     if (!valid) {
         $.snackbar({
             content: "Invalid cron string; please enter correct string"

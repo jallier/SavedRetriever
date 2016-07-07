@@ -1,8 +1,19 @@
 var bar = "";
 var id = "";
+
+function cancelDownload(){
+    $.post('/cancel', function(){
+        // run on success
+        $.snackbar({content: "Download cancelled"})
+    });
+    $.snackbar({content: "Cancelling..."})
+}
+
 $(document).ready(function() {
     bar = $.snackbar({
         content: "",
+        action_message: "Cancel",
+        action_function: cancelDownload,
         timeout: 0
     });
     id = $(bar).attr('id');
