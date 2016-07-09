@@ -1,6 +1,7 @@
 var bar = "";
 var id = "";
 
+/** Cancels download and displays snackbar */
 function cancelDownload(){
     $.post('/cancel', function(){
         // run on success
@@ -9,17 +10,7 @@ function cancelDownload(){
     $.snackbar({content: "Cancelling..."})
 }
 
-$(document).ready(function() {
-    bar = $.snackbar({
-        content: "",
-        action_message: "Cancel",
-        action_function: cancelDownload,
-        timeout: 0
-    });
-    id = $(bar).attr('id');
-    $("#" + id).snackbar("hide");
-});
-
+/** Gets JSON data from server of status of download thread. */
 function getStatus() {
     $.getJSON('/status', function(data) {
         if (data.status == 'running') {
@@ -37,6 +28,7 @@ function getStatus() {
     });
 }
 
+/** Requests server to delete specific post, then removes the html from the DOM */
 function deletePost(post) {
     var data = {
         "post": post
@@ -54,7 +46,19 @@ function deletePost(post) {
         }
     });
 }
+
 $(document).ready(function() {
+    // Create the ongoing snackbar, and hide it
+    bar = $.snackbar({
+        content: "",
+        action_message: "Cancel",
+        action_function: cancelDownload,
+        timeout: 0
+    });
+    id = $(bar).attr('id');
+    $("#" + id).snackbar("hide");
+
+    // Click on start download button
     $("#run_downloader").click(function() {
         $.post('/run').done()
         $.snackbar({
@@ -62,8 +66,8 @@ $(document).ready(function() {
         });
         getStatus();
     });
-});
-$(document).ready(function() {
+
+    //Click on delete all
     $("#delete_all_posts").click(function() {
         if (confirm("Are you sure you want to delete all posts from the database? If you have unsaved them on reddit, you will be unable to redownload")) {
             $.getJSON('/delete_all_posts', function(data) {
@@ -82,22 +86,21 @@ $(document).ready(function() {
             }, 2000);
         }
     });
-});
-$(document).ready(function() {
+
+    //Click on cancel downloads
     $("#cancel").click(function() {
         $.post('/cancel').done();
         $.snackbar({
             content: "Cancelling download..."
         });
     });
-});
-$(document).ready(function() {
+
+    //Click on test text
     $("#test").click(function() {
         $("#delete_post").modal("show");
     });
-});
 
-$(document).ready(function() {
+    //Click on delete post icon.
     $(".a-icon").click(function() {
         var post_code = $(this).data("post");
         $("#delete_post").modal("show");

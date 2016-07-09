@@ -2,10 +2,8 @@
 re = /[\d\*]+/;
 valid = true;
 
+/** Checks if current input is valid. Used for when save button on settings page is clicked */
 function isValid() {
-    /**
-    * Checks if current input is valid. Used for when save button on settings page is clicked.
-    */
     if (!valid) {
         $.snackbar({
             content: "Invalid cron string; please enter correct string"
@@ -15,10 +13,10 @@ function isValid() {
     return true;
 }
 
+/** Validate manually typed cron values
+ * @param {string} cronValue - Cron string to evaluate.
+ */
 function validCronString(cronValue) {
-    /**
-     * Validate manually typed cron values
-     */
     var inp_arr = cronValue.trim().split(" ");
 
     if (inp_arr.length < 5) { //Too few chars in the input string
