@@ -57,6 +57,10 @@
             text-align: center;
             font-size: 200%;
         }
+
+        .btn-bot{
+            width: 100%;
+        }
     </style>
 
     <title>SavedRetriever Settings</title>
@@ -243,14 +247,17 @@
     <br/>
     <div class="row">
         <div class="col-md-3">
-            <div>
-                <a href="javascript:void(0)" class="btn btn-raised btn-info disabled">
-                    Export posts to html
-                    <div class="ripple-container"></div>
-                </a>
-            </div>
+            <a href="javascript:void(0)" class="btn btn-raised btn-info disabled btn-bot">
+                Export posts to html
+                <div class="ripple-container"></div>
+            </a>
         </div>
-
+        <div class="col-md-3">
+            <a id="delete_all_posts" class="btn btn-raised btn-info btn-bot">
+                Delete all posts
+                <div class="ripple-container"></div>
+            </a>
+        </div>
     </div>
 </div>
 
