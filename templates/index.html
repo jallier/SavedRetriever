@@ -68,6 +68,9 @@
                 <li class="active"><a href="/">Home<span class="sr-only">(current)</span></a></li>
                 <li><a href="/settings">Settings</a></li>
             </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a id="run_downloader" href="#"><b>Refresh Posts</b></a></li>
+            </ul>
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
@@ -76,38 +79,30 @@
     <div class="row">
         <div class="col-md-12">
             <div class="bs-component">
-                <div class="page-header">
-                    <h1>SavedRetriever Home</h1>
+                <!-- Set variables for showing active sort order -->
+                {% set post_sort = [
+                    ('none', 'Downloaded'), ('desc', 'Downloaded Desc'), ('date', 'Date posted'), ('date_desc',
+                    'Date posted desc')
+                ] %}
+                {% set active_page = request.args.get('sort') %}
+                <div class="btn-group btn-settings">
+                    <a href="javascript:void(0)" class="btn btn-default btn-raised dropdown-toggle"
+                       data-toggle="dropdown"><i class="material-icons">settings</i> <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="dropdown-header">Sort Options</li>
+                        {% for href, text in post_sort %}
+                            <li {% if href== active_page %} class="active" {% endif %}>
+                                <a href="?sort={{ href }}">{{ text }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
-                <div>
-                    <p>
-                        Access your saved posts from Reddit
-                    </p>
-                    <div>
-                        <a href="javascript:window.location.reload()" class="btn btn-raised btn-info">
-                            Refresh Page
-                            <div class="ripple-container"></div>
-                        </a>
-                        Sort by: <a href="/">Downloaded</a> -
-                        <a href="/?sort=desc">Downloaded desc</a> -
-                        <a href="/?sort=date">Date posted</a> -
-                        <a href="/?sort=date_desc">Date posted desc</a>
-                    </div>
-                    <div>
-                        <a id="run_downloader" class="btn btn-raised btn-info">
-                            Refresh Posts
-                            <div class="ripple-container"></div>
-                        </a>
-                        <a id="cancel" class="btn btn-raised btn-info">
-                            Cancel Download
-                            <div class="ripple-container"></div>
-                        </a>
-                        <span id="test">Click me</span>
-                    </div>
-                </div>
+                <span class="page-header" id="title"><h1 id="title-h1">Saved Posts</h1></span>
             </div>
         </div>
     </div>
+</div>
     <!-- Delete individual post modal -->
     <div class="modal" id="delete_post">
         <div class="modal-dialog">
@@ -130,6 +125,7 @@
     </div>
     <!-- end modal -->
 
+<div class="container">
     <div class="row">
         {% for post in posts.items %}
         {% if post.permalink is not none %}

@@ -16,6 +16,15 @@
 .icon {
     display: none;
 }
+.btn-settings{
+    margin-top: 0px;
+    float: left;
+}
+#title-h1{
+    float: left;
+    margin-top: 3px;
+    margin-left: 10px;
+}
 .sr-image {}
 @media screen and (max-width: 991px) {
     /** Less than Large screens */
