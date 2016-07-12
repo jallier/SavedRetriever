@@ -66,6 +66,27 @@
     <title>SavedRetriever Settings</title>
 </head>
 <body>
+<!-- Delete individual post modal -->
+    <div class="modal" id="delete_all">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Delete all posts?</h4>
+                </div>
+                <div class="modal-body">
+                    <p>WARNING! This will remove all downloaded posts. Are you sure you want to proceed? You may not be able to redownload them if you have
+                        unsaved them on reddit. This will NOT delete the image/video files on disk, however it will empty the database off all post data.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="delete_all_confirm">Yes, delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end modal -->
 <nav class="navbar navbar-default">
     <div class="container-fluid">
         <!-- Brand and toggle get grouped for better mobile display -->

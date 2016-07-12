@@ -95,7 +95,8 @@ $(document).ready(function() {
 
     //Click on delete all
     $("#delete_all_posts").click(function() {
-        if (confirm("Are you sure you want to delete all posts from the database? If you have unsaved them on reddit, you will be unable to redownload")) {
+        $("#delete_all").modal("show");
+        $("#delete_all_confirm").click(function() {
             $.getJSON('/delete_all_posts', function(data) {
                 if (data.status == 'success') {
                     $.snackbar({
@@ -107,9 +108,6 @@ $(document).ready(function() {
                     });
                 }
             });
-            setTimeout(function() {
-                location.reload();
-            }, 2000);
-        }
+        });
     });
 });
