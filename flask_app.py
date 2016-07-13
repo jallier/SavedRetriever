@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, send_file, jsonify, redirect,
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
+from waitress import serve
 
 app = Flask(__name__)
 app.config.from_object("config")
@@ -359,4 +360,5 @@ if __name__ == "__main__":
 
     import first_run
     first_run.check_if_first_run()
-    app.run(debug=False)
+    # app.run(debug=False)
+    serve(app, port="5000")

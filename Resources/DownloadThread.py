@@ -286,7 +286,7 @@ class DownloadThread(Thread):
             raise SystemExit
 
         logger.info("Beginning to save files to db...")
-        items = r.get_me().get_saved(limit=4)
+        items = r.get_me().get_saved()
         self.post_downloaded_count = 0
         # Convert saved post generator to a list in order to iterate backwards, so that the most recent saved post
         # is the most recently downloaded
