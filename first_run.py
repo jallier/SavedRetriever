@@ -26,7 +26,8 @@ def _create_db():
                 models.Settings(setting_name="run_on_schedule", setting_value="True", setting_type=1),
                 models.Settings(setting_name="cron_string", setting_value="0 0 * * 0", setting_type=0),
                 models.Settings(setting_name="save_comments", setting_value="True", setting_type=1),
-                models.Settings(setting_name="number_of_comments", setting_value=5, setting_type=2)]
+                models.Settings(setting_name="number_of_comments", setting_value=5, setting_type=2),
+                models.Settings(setting_name="reddit_refresh_token", setting_value="", setting_type=0)]
 
     for x in settings:
         db.session.add(x)

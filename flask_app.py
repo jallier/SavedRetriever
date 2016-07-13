@@ -290,7 +290,10 @@ def authorize_callback():
     else:
         s = reddit_db_entry
         s.setting_value = refresh_token
+    global settings_dict
     db.session.commit()
+    settings_dict['reddit_refresh_token'] = db.session.query(models.Settings).filter_by(
+        setting_name='reddit_refresh_token').first()
 
     return reddit_wizard()
 
