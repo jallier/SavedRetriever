@@ -351,6 +351,9 @@ def set_schedule():
 
 
 if __name__ == "__main__":
+    import first_run
+    first_run.check_if_first_run()
+
     settings_dict = {}
     for setting in models.Settings.query.all():
         settings_dict[setting.setting_name] = setting
@@ -358,7 +361,5 @@ if __name__ == "__main__":
     mythread = DownloadThread(db, logger, thread_status_queue, settings_dict)
     job = set_schedule()
 
-    import first_run
-    first_run.check_if_first_run()
     # app.run(debug=False)
     serve(app, port="5000")
