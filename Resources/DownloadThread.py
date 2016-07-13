@@ -516,7 +516,10 @@ class DownloadThread(Thread):
                         with urllib.request.urlopen(request) as response:
                             html = response.read()
                     except urllib.error.HTTPError as e:
-                        self.logger.warning("Unable to access article url\n %s\n %s\n %s", e, url, i.name)
+                        self.logger.error("Unable to access article url\n %s\n %s\n %s", e, url, i.name)
+                        continue
+                    except urllib.error.URLError as e:
+                        self.logger.error("Unable to access article url\n %s\n %s\n %s", e, url, i.name)
                         continue
 
                     article = Document(html)
