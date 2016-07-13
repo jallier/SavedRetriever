@@ -1,9 +1,11 @@
 import datetime
 import json
+import logging
 import threading
 import time
 import urllib.error
 import urllib.request
+from logging import handlers
 from queue import Empty
 from threading import Thread
 
@@ -22,8 +24,16 @@ from sqlalchemy.exc import IntegrityError, InterfaceError
 class DownloadThread(Thread):
     def __init__(self, db, logger, output_queue, settings_dict):
         Thread.__init__(self)
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        ch = logging.handlers.RotatingFileHandler("sr.log")
+        ch.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        self.logger.addHandler(ch)
+        self.logger.propagate = False
+
         self.db = db
-        self.logger = logger
         self.output_queue = output_queue
         self.stop_request = threading.Event()
         self.post_downloaded_count = 0

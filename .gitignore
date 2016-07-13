@@ -6,7 +6,7 @@ index.txt
 test.py
 SRDownloads/
 src/
-SR.log
+*.log
 *.db
 db_design.txt
 db_repository/
