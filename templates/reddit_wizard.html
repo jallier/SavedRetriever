@@ -1,0 +1,42 @@
+{% extends "wizard_base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div class="page-header">
+                    <h1>Reddit - OAuth</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div>
+                    <h3>Step 1: Open reddit and authorize the app - srtester1 savedretriever</h3>
+                    <a href="https://www.reddit.com/api/v1/authorize?client_id={{ client_id }}&response_type={{ response_type }}&state={{ state }}&redirect_uri={{ redirect_uri }}&scope={{ scope }}&duration={{ duration }}"
+                       class="btn btn-raised btn-info">
+                        Open Reddit
+                        <div class="ripple-container"></div>
+                    </a>
+                </div>
+                <div class="form-group control-label is-empty">
+                    <label class="control-label">Reddit OAuth Token</label>
+                    <input class="form-control" type="text"
+                           value="{% if refresh_token is not none %} {{refresh_token}} {% endif %}">
+                    <span class="material-input"></span>
+                </div>
+            </div>
+            <div class="bs-component">
+                <a href="/settings" class="btn btn-raised btn-primary pull-right">
+                    Complete
+                    <div class="ripple-container"></div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

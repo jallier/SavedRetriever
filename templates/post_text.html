@@ -1,0 +1,40 @@
+{% extends "post_base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div>
+                    <h1>{{ post.title }}</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="bs-component">
+                <div class="info">
+                    <h4><a href="{{ post.permalink }}">Permalink</a> submitted by {{ post.author.username }} on {{ post.date_posted.strftime('%d-%m-%Y') }}</h4>
+                    <div>
+                        <a href="/user/{{ post.author.username }}" class="btn btn-raised">Find saved posts by user</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div class="post-content">
+                    {{ post.body_content|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

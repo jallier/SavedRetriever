@@ -1,0 +1,49 @@
+.panel-heading {
+    height: 50px;
+    overflow: hidden;
+}
+.panel-body {
+    height: 200px;
+    overflow: hidden;
+    padding-bottom: 5px;
+}
+.panel {
+    margin-bottom: 30px;
+}
+.panel:hover .icon {
+    display: block;
+}
+.icon {
+    display: none;
+}
+.btn-settings{
+    margin-top: 0px;
+    float: left;
+}
+#title-h1{
+    float: left;
+    margin-top: 3px;
+    margin-left: 10px;
+}
+.sr-image {}
+@media screen and (max-width: 991px) {
+    /** Less than Large screens */
+    .icon {
+        position: absolute;
+        bottom: 5px;
+        right: 20px;
+        background-color: #eeeeee;
+    }
+}
+@media only screen and (min-width: 992px) {
+    /** Large screens */
+    .icon {
+        position: relative;
+        bottom: 32px;
+        right: 3px;
+        background-color: #eeeeee;
+    }
+}
+.a-icon {
+    color: black;
+}

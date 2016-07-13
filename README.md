@@ -27,6 +27,11 @@ Once the folder is downloaded:
 
 	 `python SavedRetriever -e -p /home/Downloads/Reddit/`
 
+Using a virtualenv is recommended. This can be achieved by:
+ virtualenv -p python3 env
+ source env/bin/activate or source env/bin/activate.fish if using the fish shell
+ "pip install -r requirements.txt" to install the required python packages
+
 	
 ##Services required##
 As of version 0.9, SR requires the use of the these 3rd party services. This means that a valid account and developer oauth tokens are needed for each of the following services (ie. you must register an app of your own and use the tokens they give you):
@@ -58,3 +63,4 @@ SR uses the following 3rd party libraries:
  - [Readability API](https://github.com/arc90/python-readability-api)
  - [Imgur API](https://github.com/Imgur/imgurpython)
  - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+ - [Lxml](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) Required for windows. For fedora need to install "redhat-rpm-config"

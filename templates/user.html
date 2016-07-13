@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Material Design fonts -->
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/icon?family=Material+Icons">
+
+    <!-- Bootstrap -->
+    <script src="{{url_for('static', filename='bootstrap/js/jquery-1.12.1.min.js')}}"></script>
+    <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='bootstrap/css/bootstrap.min.css')}}">
+
+    <!-- Bootstrap Material Design -->
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='bootstrap-material/dist/css/bootstrap-material-design.css')}}">
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='bootstrap-material/dist/css/ripples.min.css')}}">
+    <script src="{{url_for('static', filename='bootstrap-material/dist/js/ripples.min.js')}}"></script>
+    <script src="{{url_for('static', filename='bootstrap-material/dist/js/material.min.js')}}"></script>
+
+    <!-- Bootstrap Material Snackbar -->
+    <link href="{{url_for('static', filename='bootstrap-material/dist/css/snackbar.min.css')}}" rel=stylesheet
+          type="text/css">
+    <script src="{{url_for('static', filename='bootstrap-material/dist/js/snackbar.min.js')}}"></script>
+
+    <title>SavedRetriever</title>
+
+    <script src="{{url_for('static', filename='ajax.js')}}"></script>
+    <style>
+        .panel-heading{
+        height:50px;
+        overflow: hidden;
+        }
+        .panel-body{
+        height:200px;
+        overflow: hidden;
+        }
+        .sr-image{
+
+        }
+    </style>
+</head>
+<body>
+<div class="bs-component">
+    <div class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header navbar-brand">
+                SavedRetriever
+            </div>
+            <div class="navbar-collapse collapse navbar-responsive-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="{{ url_for('settings') }}">Settings</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bs-component">
+                <div class="page-header">
+                    <h1>Posts for /u/{{ user.username }}</h1>
+                    <div>
+                        <a href="http://www.reddit.com/u/{{ user.username }}" target="_blank"
+                           class="btn btn-raised">View posts on Reddit</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        {% for post in posts %}
+        <div class="col-md-3">
+            <div class="bs-component">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><a href="/post/{{ post.code }}">{{ post.title }}</a></div>
+                    <div class="panel-body">
+                        {{ post.summary|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+<!--Initialize the ripple effect-->
+<script type="text/javascript">
+$(function() {
+  $.material.init();
+});
+
+
+</script>
+
+</body>
+</html>
