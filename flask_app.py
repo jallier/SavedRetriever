@@ -16,10 +16,6 @@ app = Flask(__name__)
 app.config.from_object("config")
 db = SQLAlchemy(app)
 
-# import models so db knows where the models are
-from Resources import models
-from Resources.DownloadThread import DownloadThread
-
 logger = logging.getLogger('werkzeug')
 thread_status_queue = Queue()
 
@@ -356,6 +352,12 @@ def set_schedule():
 if __name__ == "__main__":
     import first_run
     first_run.check_if_first_run()
+
+    # import models so db knows where the models are
+    from Resources import models
+    from Resources.DownloadThread import DownloadThread
+
+    args = get_args()
 
     settings_dict = {}
     for setting in models.Settings.query.all():
