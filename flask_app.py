@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 from queue import Queue
@@ -349,6 +350,17 @@ def set_schedule():
     return cron_job
 
 
+def get_args():
+    """
+    Parse command arguments using argparse module
+
+    :return: arg object containing arguments passed in
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", action="store_true", help="Debug mode")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     import first_run
     first_run.check_if_first_run()
@@ -366,5 +378,7 @@ if __name__ == "__main__":
     mythread = DownloadThread(db, logger, thread_status_queue, settings_dict)
     job = set_schedule()
 
-    # app.run(debug=False)
-    serve(app, port="5000")
+    if args.debug is True:
+        app.run(debug=True)
+    else:
+        serve(app, port="5000")
