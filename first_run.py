@@ -21,13 +21,21 @@ def _create_db():
     """
     db_create.main()
     print("Adding initial values...")
-    settings = [models.Settings(setting_name="color", setting_value="blue", setting_type=0),
-                models.Settings(setting_name="number_of_posts", setting_value=20, setting_type=2),
-                models.Settings(setting_name="run_on_schedule", setting_value="True", setting_type=1),
-                models.Settings(setting_name="cron_string", setting_value="0 0 * * 0", setting_type=0),
-                models.Settings(setting_name="save_comments", setting_value="True", setting_type=1),
-                models.Settings(setting_name="number_of_comments", setting_value=5, setting_type=2),
-                models.Settings(setting_name="reddit_refresh_token", setting_value="", setting_type=0)]
+    new_user = models.User(username="admin", password="admin")
+    try:  # Create a new default user
+        db.session.add(new_user)
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        print("error creating db", e)
+    user = models.User.query.get(1)
+    settings = [models.Settings(key="color", value="blue", user_id=user.id),
+                models.Settings(key="number_of_posts", value="20", user_id=user.id),
+                models.Settings(key="run_on_schedule", value="True", user_id=user.id),
+                models.Settings(key="cron_string", value="0 0 * * 0", user_id=user.id),
+                models.Settings(key="save_comments", value="True", user_id=user.id),
+                models.Settings(key="number_of_comments", value="5", user_id=user.id),
+                models.Settings(key="reddit_refresh_token", value="", user_id=user.id)]
 
     for x in settings:
         db.session.add(x)

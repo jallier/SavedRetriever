@@ -43,6 +43,16 @@ class Images(db.Model):
         return '<FilePath %s>' % self.file_path
 
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True)
+    password = db.Column(db.String(64))
+    settings = db.relationship("Settings", backref='user', lazy='dynamic')
+
+    def __repr__(self):
+        return "<User {}>".format(self.username)
+
+
 class Settings(db.Model):
     """
      setting_type is int, where
@@ -51,10 +61,9 @@ class Settings(db.Model):
      2 = Integer
     """
     id = db.Column(db.Integer, primary_key=True)
-    setting_name = db.Column(db.String(32), unique=True)
-    setting_value = db.Column(db.String(128))
-    token_authorised = db.Column(db.Boolean)
-    setting_type = db.Column(db.Integer)
+    key = db.Column(db.String(64), unique=True)
+    value = db.Column(db.String(128))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return '<Setting %s>' % self.setting_name
+        return '<Setting {}:{}>'.format(self.key, self.value)
