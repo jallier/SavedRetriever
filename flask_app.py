@@ -39,7 +39,7 @@ def main():
     else:
         posts = posts.order_by(desc(models.Post.date_downloaded))
 
-    posts_per_page = int(settings_dict['number_of_posts'].setting_value)
+    posts_per_page = int(settings_dict['number_of_posts'].value)
     posts = posts.paginate(page, posts_per_page, False)
     return render_color_template('index.html', posts=posts)
 
@@ -201,31 +201,31 @@ def settings():
     save_comments = settings_dict['save_comments']
     num_of_posts = settings_dict['number_of_posts']
     color = settings_dict['color']
-    cron_string = settings_dict['cron_string'].setting_value
+    cron_string = settings_dict['cron_string'].value
     if form.validate_on_submit():
-        if form.number_of_comments.data != num_of_comments.setting_value:
-            settings_dict['number_of_comments'].setting_value = form.number_of_comments.data
+        if form.number_of_comments.data != num_of_comments.value:
+            settings_dict['number_of_comments'].value = form.number_of_comments.data
             db.session.query(models.Settings).filter_by(
-                setting_name='number_of_comments').first().setting_value = form.number_of_comments.data
+                key='number_of_comments').first().value = form.number_of_comments.data
 
-        if form.save_comments.data != save_comments.setting_value:
-            settings_dict['save_comments'].setting_value = str(form.save_comments.data)
+        if form.save_comments.data != save_comments.value:
+            settings_dict['save_comments'].value = str(form.save_comments.data)
             db.session.query(models.Settings).filter_by(
-                setting_name='save_comments').first().setting_value = str(form.save_comments.data)
+                key='save_comments').first().value = str(form.save_comments.data)
 
-        if form.number_of_posts.data != num_of_posts.setting_value:
-            settings_dict['number_of_posts'].setting_value = form.number_of_posts.data
+        if form.number_of_posts.data != num_of_posts.value:
+            settings_dict['number_of_posts'].value = form.number_of_posts.data
             db.session.query(models.Settings).filter_by(
-                setting_name='number_of_posts').first().setting_value = form.number_of_posts.data
+                key='number_of_posts').first().value = form.number_of_posts.data
 
-        if form.color.data != color.setting_value:
-            settings_dict['color'].setting_value = form.color.data
-            db.session.query(models.Settings).filter_by(setting_name='color').first().setting_value = form.color.data
+        if form.color.data != color.value:
+            settings_dict['color'].value = form.color.data
+            db.session.query(models.Settings).filter_by(key='color').first().value = form.color.data
 
         if form.cron_string.data != cron_string:
-            settings_dict['cron_string'].setting_value = form.cron_string.data
+            settings_dict['cron_string'].value = form.cron_string.data
             db.session.query(models.Settings).filter_by(
-                setting_name='cron_string').first().setting_value = form.cron_string.data
+                key='cron_string').first().value = form.cron_string.data
 
         try:
             db.session.commit()
@@ -238,17 +238,17 @@ def settings():
         # Update job schedule if data has changed since last write
         if form.cron_string.data != cron_string:
             global job
-            cron_array = get_cron_array(settings_dict['cron_string'].setting_value)
+            cron_array = get_cron_array(settings_dict['cron_string'].value)
             job.reschedule('cron', minute=cron_array[0], hour=cron_array[1], day=cron_array[2],
                            month=cron_array[3], day_of_week=cron_array[4])
-            logger.info("Next job rescheduled to {}".format(settings_dict['cron_string'].setting_value))
+            logger.info("Next job rescheduled to {}".format(settings_dict['cron_string'].value))
 
         return redirect('/settings')
     else:
         flash_errors(form)
 
     # Set the values of the input boxes in the form
-    form.color.data = color.setting_value
+    form.color.data = color.value
     return render_color_template('settings.html', form=form, reddit_token=reddit_token, evernote_token=None,
                                  num_of_comments=num_of_comments, save_comments=save_comments,
                                  num_of_posts=num_of_posts, cron_string=cron_string)
@@ -268,8 +268,8 @@ def reddit_wizard():
     redirect_uri = 'http://127.0.0.1:5000/authorize_callback'
     scope = 'identity history read'
     duration = 'permanent'
-    refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first()
-    if refresh_token is not None: refresh_token = refresh_token.setting_value
+    refresh_token = models.Settings.query.filter_by(key='reddit_refresh_token').first()
+    if refresh_token is not None: refresh_token = refresh_token.value
     return render_color_template('reddit_wizard.html', client_id=client_id, response_type=response_type, state=state,
                                  redirect_uri=redirect_uri, scope=scope, duration=duration,
                                  refresh_token=refresh_token)
@@ -279,24 +279,24 @@ def reddit_wizard():
 def authorize_callback():
     from Resources import reddit_oauth_wizard as auth
     refresh_token = auth.reddit_oauth_wizard(request.args.get('code'))
-    reddit_db_entry = db.session.query(models.Settings).filter_by(setting_name='reddit_refresh_token').first()
+    reddit_db_entry = db.session.query(models.Settings).filter_by(key='reddit_refresh_token').first()
     if reddit_db_entry is None:
-        s = models.Settings(setting_name='reddit_refresh_token', setting_value=refresh_token, setting_type=0,
+        s = models.Settings(key='reddit_refresh_token', value=refresh_token, setting_type=0,
                             token_authorised=True)
         db.session.add(s)
     else:
         s = reddit_db_entry
-        s.setting_value = refresh_token
+        s.value = refresh_token
     global settings_dict
     db.session.commit()
     settings_dict['reddit_refresh_token'] = db.session.query(models.Settings).filter_by(
-        setting_name='reddit_refresh_token').first()
+        key='reddit_refresh_token').first()
 
     return reddit_wizard()
 
 
 def render_color_template(template, **kwargs):
-    return render_template(template, color=settings_dict['color'].setting_value, **kwargs)
+    return render_template(template, color=settings_dict['color'].value, **kwargs)
 
 
 @app.route('/test')
@@ -304,7 +304,7 @@ def test():
     CLIENT_ID = '_Nxh9h0Tys5KCQ'
     redirect_uri = 'http://127.0.0.1:5000/authorize_callback'
 
-    refresh_token = models.Settings.query.filter_by(setting_name='reddit_refresh_token').first().setting_value
+    refresh_token = models.Settings.query.filter_by(key='reddit_refresh_token').first().value
 
     r = praw.Reddit('Saved Retriever Installed by /u/fuzzycut')
     r.set_oauth_app_info(CLIENT_ID, '', redirect_uri)
@@ -343,7 +343,7 @@ def set_schedule():
     """
     logger.info("Starting scheduler")
     scheduler = BackgroundScheduler()
-    cron_array = get_cron_array(settings_dict['cron_string'].setting_value)
+    cron_array = get_cron_array(settings_dict['cron_string'].value)
     cron_job = scheduler.add_job(run, 'cron', minute=cron_array[0], hour=cron_array[1], day=cron_array[2],
                                  month=cron_array[3], day_of_week=cron_array[4])
     scheduler.start()
@@ -372,9 +372,9 @@ if __name__ == "__main__":
     args = get_args()
 
     settings_dict = {}
-    for setting in models.Settings.query.all():
-        settings_dict[setting.setting_name] = setting
     # Create a dict of settings so that the db doesn't have to be queried constantly.
+    for setting in models.Settings.query.all():
+        settings_dict[setting.key] = setting
     mythread = DownloadThread(db, logger, thread_status_queue, settings_dict)
     job = set_schedule()
 

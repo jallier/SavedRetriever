@@ -133,10 +133,10 @@
             <div class="bs-component">
                 <form method="post" onkeypress="return event.keyCode != 13;" name="settingsForm" onsubmit="return isValid()">
                     {{ form.hidden_tag() }}
-                    <div class="form-group is-empty {% if reddit_token.setting_value is not none %} control-label {% else %} label-floating {% endif %}">
+                    <div class="form-group is-empty {% if reddit_token.value is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label">Reddit OAuth Token</label>
 
-                        {{ form.reddit_token(size=50, class_="form-control", value=reddit_token.setting_value) }}
+                        {{ form.reddit_token(size=50, class_="form-control", value=reddit_token.value) }}
                         <span class="material-input"></span>
                     </div>
                     <div class="form-group is-empty {% if evernote_token is not none %} control-label {% else %} label-floating {% endif %}">
@@ -152,14 +152,14 @@
                             </label>
                         </div>
                     </div>
-                    <div class="form-group is-empty {% if num_of_comments.setting_value is not none %} control-label {% else %} label-floating {% endif %}">
+                    <div class="form-group is-empty {% if num_of_comments.value is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label">Number of comments to save</label>
-                        {{ form.number_of_comments(size=3, class_="form-control", value=num_of_comments.setting_value) }}
+                        {{ form.number_of_comments(size=3, class_="form-control", value=num_of_comments.value) }}
                         <span class="material-input"></span>
                         <div class="checkbox">
                             <label>
-                                {% if save_comments.setting_value == "True" %}
-                                    {{ form.save_comments(checked=save_comments.setting_value) }}
+                                {% if save_comments.value == "True" %}
+                                    {{ form.save_comments(checked=save_comments.value) }}
                                 {% else %}
                                     {{ form.save_comments() }}
                                 {% endif %}
@@ -167,9 +167,9 @@
                             </label>
                         </div>
                     </div>
-                    <div class="form-group is-empty {% if num_of_posts.setting_value is not none %} control-label {% else %} label-floating {% endif %}">
+                    <div class="form-group is-empty {% if num_of_posts.value is not none %} control-label {% else %} label-floating {% endif %}">
                         <label class="control-label" for="number_of_posts">Number of post items to show on main page</label>
-                        {{ form.number_of_posts(size=3, class_="form-control", value=num_of_posts.setting_value) }}
+                        {{ form.number_of_posts(size=3, class_="form-control", value=num_of_posts.value) }}
                         <span class="material-input"></span>
                     </div>
                     <div class="form-group">

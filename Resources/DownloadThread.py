@@ -261,8 +261,8 @@ class DownloadThread(Thread):
         logger.info("\n###########\nStarting SR\n###########")
 
         logger.debug("Getting settings from db")
-        get_comments = self.settings_dict['save_comments'].setting_value
-        number_of_comments = self.settings_dict['number_of_comments'].setting_value
+        get_comments = self.settings_dict['save_comments'].value
+        number_of_comments = self.settings_dict['number_of_comments'].value
 
         path = "static/SRDownloads"
         if not os.path.exists(path):
@@ -272,7 +272,7 @@ class DownloadThread(Thread):
         logger.info('Authenticating with Reddit')
         client_id = '_Nxh9h0Tys5KCQ'
         redirect_uri = 'http://127.0.0.1:5000/authorize_callback'
-        refresh_token = self.settings_dict['reddit_refresh_token'].setting_value
+        refresh_token = self.settings_dict['reddit_refresh_token'].value
         user_agent = "SavedRetriever 0.9 by /u/fuzzycut"
 
         try:
