@@ -5,9 +5,10 @@ from queue import Queue
 
 import os
 import praw
-from Resources.forms import SettingsForm
+from Resources.forms import SettingsForm, LoginForm
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template, request, send_file, jsonify, redirect, flash
+from flask_login import LoginManager, login_user, login_required, fresh_login_required, current_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
@@ -16,12 +17,15 @@ from waitress import serve
 app = Flask(__name__)
 app.config.from_object("config")
 db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 logger = logging.getLogger('werkzeug')
 thread_status_queue = Queue()
 
 
 @app.route("/")
+@login_required
 def main():
     page = request.args.get('page')
     sort = request.args.get('sort')
@@ -193,6 +197,7 @@ def delete_all_posts():
 
 
 @app.route("/settings", methods=['GET', 'POST'])
+@fresh_login_required
 def settings():
     global settings_dict
     form = SettingsForm()
@@ -313,6 +318,41 @@ def test():
     r.set_access_credentials(**access_information)
 
     return r.get_me().name
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return models.User.query.filter_by(username=user_id).first()
+
+
+@login_manager.unauthorized_handler
+def handle_auth_error():
+    return redirect("/login")
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        logged_user = models.User.query.filter_by(username=form.username.data).first()
+        if logged_user:
+            if logged_user.password == form.password.data:  # Replace this with something secure later
+                logged_user.authenticated = True
+                # db.session.add(logged_user)
+                db.session.commit()
+                login_user(logged_user, remember=False)
+                return redirect("/")
+    return render_color_template("login.html", form=form)
+
+
+@app.route("/logout", methods=["GET"])
+@login_required
+def logout():
+    logged_user = models.User.query.filter_by(username=current_user.username).first()
+    logged_user.authenticated = False
+    db.session.commit()
+    logout_user()
+    return redirect("/login")
 
 
 def get_cron_array(cron_string):

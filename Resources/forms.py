@@ -13,3 +13,8 @@ class SettingsForm(Form):
     color = SelectField('color', choices=[("red", "Red"), ("blue", 'Blue'), ("purple", "Purple"), ("green", "Green"),
                                           ("yellow", "Yellow")])
     cron_string = StringField('cron_string')
+
+
+class LoginForm(Form):
+    username = StringField('username', validators=[DataRequired()], default="admin")
+    password = StringField('password')
