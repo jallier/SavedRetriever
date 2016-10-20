@@ -4,6 +4,10 @@ SR is a python script that will fetch the users saved comments and posts from re
 
 Requires Python 3. 
 
+Screenshots:
+![Home](http://i.imgur.com/N8AtGFO.png)
+![Image post](http://i.imgur.com/KTjiGkH.png)
+
 ----------
 
 To run
