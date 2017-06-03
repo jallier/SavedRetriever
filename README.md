@@ -1,4 +1,4 @@
-#SavedRetriever #
+# SavedRetriever #
 
 SR is a python script that will fetch the users saved comments and posts from reddit and download them locally, as well as uploading to evernote. SR will save files to a local folder called 'SRDownloads' which contains all the saved items of the users account. SR will save comments, self posts, direct linked images, imgur albums and text based articles. Readability is used to parse webpages for content, which may result in some pages not saving correctly, however, most text based pages (eg news articles) can be saved without issue.
 
@@ -37,7 +37,7 @@ Using a virtualenv is recommended. This can be achieved by:
  "pip install -r requirements.txt" to install the required python packages
 
 	
-##Services required##
+## Services required ##
 As of version 0.9, SR requires the use of the these 3rd party services. This means that a valid account and developer oauth tokens are needed for each of the following services (ie. you must register an app of your own and use the tokens they give you):
 
  - Reddit - [reddit.com](www.reddit.com) - You must register a new script-type app [here.](https://www.reddit.com/prefs/apps/) Set the name as anything you like, and the redirect uri as http://127.0.0.1:65010/authorize_callback
@@ -49,7 +49,7 @@ As of version 0.9, SR requires the use of the these 3rd party services. This mea
 
 Readability is required to parse articles into more readable text, and imgur is required to download albums (the majority of albums posted to reddit are from imgur)
 
-##Commandline switches##
+## Commandline switches ##
 The following commandline switches are available:
 
 - -e, -evernote: when present, SR will attempt to upload saved items to evernote.
@@ -58,7 +58,7 @@ The following commandline switches are available:
 - -t: When present, SR will delete any files it downloads once it has uploaded them to evernote. (Partially implemented) Only available when using evernote
 - -i: When present, SR will print the log to the console as well as the log file at info level.
 
-##3rd Party libraries##
+## 3rd Party libraries ##
 SR uses the following 3rd party libraries:
 
  - [PRAW](https://github.com/praw-dev/praw/tree/v3.0.0)
