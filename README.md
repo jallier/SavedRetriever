@@ -33,7 +33,6 @@ Using a virtualenv is recommended. This can be achieved by:
 ## Commandline switches ##
 The following commandline switches are available:
 
-- -e, -evernote: when present, SR will attempt to upload saved items to evernote.
 - -debug: when present, items will not be added to the index or the html index file, to allow for easier testing. Debug level log will also be collected
 - -i: When present, SR will print the log to the console as well as the log file at info level.
 
