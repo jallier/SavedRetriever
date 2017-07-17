@@ -22,6 +22,7 @@ To run
 	 `python flask_app.py`
 
  This will start the app on port 5000
+ 
  3. Visit localhost:5000 then visit the settings page and follow the authentication wizard to authenticate with reddit and get your access token.
 
 Using a virtualenv is recommended. This can be achieved by:
