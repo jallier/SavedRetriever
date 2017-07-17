@@ -3,7 +3,12 @@
 index.txt
 *.config
 *.jpg
-*.html
 test.py
 SRDownloads/
 src/
+*.log
+*.db
+db_design.txt
+db_repository/
+lxml-3.5.0-cp35-none-win32.whl
+env/

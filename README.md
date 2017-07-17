@@ -4,6 +4,10 @@ SR is a python script that will fetch the users saved comments and posts from re
 
 Requires Python 3. 
 
+Screenshots:
+![Home](http://i.imgur.com/N8AtGFO.png)
+![Image post](http://i.imgur.com/KTjiGkH.png)
+
 ----------
 
 To run
@@ -26,6 +30,11 @@ Once the folder is downloaded:
  5. The script can then be run normally and will use the provided tokens. eg
 
 	 `python SavedRetriever -e -p /home/Downloads/Reddit/`
+
+Using a virtualenv is recommended. This can be achieved by:
+ virtualenv -p python3 env
+ source env/bin/activate or source env/bin/activate.fish if using the fish shell
+ "pip install -r requirements.txt" to install the required python packages
 
 	
 ## Services required ##
@@ -58,5 +67,4 @@ SR uses the following 3rd party libraries:
  - [Readability API](https://github.com/arc90/python-readability-api)
  - [Imgur API](https://github.com/Imgur/imgurpython)
  - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/bs4/doc/)
- 
- Please see the dev branch for the most recent release
+ - [Lxml](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) Required for windows. For fedora need to install "redhat-rpm-config", ubuntu may need 'python3-dev'
